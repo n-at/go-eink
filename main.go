@@ -29,4 +29,5 @@ func main() {
 
 	eink.EnumerateDevicesExtended()
 	eink.Print("/dev/cu.usbserial-14140", image)
+	//eink.Print("/dev/ttyUSB0", image)
 }
