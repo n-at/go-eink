@@ -91,18 +91,18 @@ func Print(portName string, imageData []byte) {
 			return
 		}
 
-		log.Infof("read data after chunk #%d...", chunkIdx)
+		log.Debugf("read data after chunk #%d...", chunkIdx)
 		if d, err := readPortData(port); err != nil {
 			log.Errorf("unable to read data: %s", err)
 			return
 		} else {
-			log.Infof("read %d bytes", len(d))
+			log.Debugf("read %d bytes", len(d))
 		}
 		if d, err := readPortData(port); err != nil {
 			log.Errorf("unable to read data: %s", err)
 			return
 		} else {
-			log.Infof("read %d bytes", len(d))
+			log.Debugf("read %d bytes", len(d))
 		}
 
 		time.Sleep(200 * time.Millisecond)
@@ -119,12 +119,12 @@ func Print(portName string, imageData []byte) {
 
 	time.Sleep(5 * time.Second)
 
-	log.Info("read remaining data...")
+	log.Debugf("read remaining data...")
 	if d, err := readPortData(port); err != nil {
 		log.Errorf("unable to read data: %s", err)
 		return
 	} else {
-		log.Infof("read %d bytes", len(d))
+		log.Debugf("read %d bytes", len(d))
 	}
 
 	log.Info("done")
