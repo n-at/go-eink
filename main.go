@@ -3,30 +3,34 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"go-eink/eink"
-	"math/rand"
+	"go-eink/images"
 	"os"
-	"time"
 )
 
-func init() {
+func main() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
 	//log.SetLevel(log.InfoLevel)
-}
 
-func main() {
-	rnd := rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
-
-	image := make([]byte, (800*480)/8)
-	for i := 0; i < len(image); i++ {
-		image[i] = byte(rnd.Intn(256))
-		image[i] = byte(i % 256)
-		//image[i] = 0
+	img, err := images.Open("./assets/img.jpg")
+	if err != nil {
+		log.Fatalf("unable to open image: %s", err)
 	}
 
+	img = images.Resize(img, eink.ImageWidth, eink.ImageHeight, false)
+	img = images.Align(img, eink.ImageWidth, eink.ImageHeight, images.AlignMiddle)
+	img = images.Dithering(img, images.DitheringFloydSteinberg, 128)
+	imageData := images.ToImageData(img)
+
 	eink.EnumerateDevicesExtended()
-	eink.Print("/dev/cu.usbserial-14140", image)
+	if err := eink.Print("/dev/cu.usbserial-14140", imageData); err != nil {
+		log.Errorf("unable to print image: %s", err)
+	}
+
+	//if err := images.Save(img, "./assets/output.png"); err != nil {
+	//	log.Fatalf("unable to save image: %s", err)
+	//}
 }
