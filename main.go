@@ -3,7 +3,9 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"go-eink/eink"
+	"math/rand"
 	"os"
+	"time"
 )
 
 func init() {
