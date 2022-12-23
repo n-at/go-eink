@@ -23,7 +23,7 @@ func main() {
 	image := make([]byte, (800*480)/8)
 	for i := 0; i < len(image); i++ {
 		image[i] = byte(rnd.Intn(256))
-		//image[i] = byte(i % 256)
+		image[i] = byte(i % 256)
 		//image[i] = 0
 	}
 
