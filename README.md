@@ -55,3 +55,9 @@ Reboot machine.
 ## Troubleshooting
 
 If image is not shown, try to reconnect device and run program again (it happens randomly with no visible reasons).
+
+## Uses
+
+* [sirupsen/logrus](https://github.com/sirupsen/logrus) - MIT
+* [bugst/go-serial](https://github.com/bugst/go-serial) - BSD-3-Clause
+* [nfnt/resize](https://github.com/nfnt/resize) - ISC
