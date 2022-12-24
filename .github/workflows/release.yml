@@ -18,7 +18,6 @@ jobs:
           go-version: '^1.19'
 
       - run: go get .
-      - run: GOOS=darwin GOARCH=amd64 go build -a -o go-eink-darwin-amd64
       - run: GOOS=linux GOARCH=386 go build -a -o go-eink-linux-i386
       - run: GOOS=linux GOARCH=amd64 go build -a -o go-eink-linux-amd64
       - run: GOOS=linux GOARCH=arm64 go build -a -o go-eink-linux-arm64
@@ -30,7 +29,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            go-eink-darwin-amd64
             go-eink-linux-i386
             go-eink-linux-amd64
             go-eink-linux-arm64
