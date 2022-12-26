@@ -22,10 +22,11 @@ const (
 
 	DisplayModel = 0xc4 //IL075U - black and white, 7.5 inch
 	DisplayRed   = 0
+)
 
-	ReadDataPause      = 50
+var (
 	WriteDataPause     = 1000
-	ScreenRefreshPause = 5
+	ScreenRefreshPause = 5000
 )
 
 func Print(portName string, imageData []byte) error {
@@ -99,13 +100,13 @@ func Print(portName string, imageData []byte) error {
 			return errors.New(fmt.Sprintf("unable to read data: %s", err))
 		}
 
-		time.Sleep(WriteDataPause * time.Millisecond)
+		time.Sleep(time.Duration(WriteDataPause) * time.Millisecond)
 
 		chunkIdx++
 	}
 
 	log.Info("wait for screen to refresh")
-	time.Sleep(ScreenRefreshPause * time.Second)
+	time.Sleep(time.Duration(ScreenRefreshPause) * time.Millisecond)
 
 	log.Debugf("read remaining data")
 	if err := readPortData(port); err != nil {
@@ -123,7 +124,7 @@ func handshake(port serial.Port) error {
 		return errors.New(fmt.Sprintf("unable to send handshake request: %s", err))
 	}
 
-	time.Sleep(WriteDataPause * time.Millisecond)
+	time.Sleep(time.Duration(WriteDataPause) * time.Millisecond)
 
 	log.Debug("read handshake response")
 	buf := make([]byte, 1024)

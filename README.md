@@ -2,7 +2,7 @@
 
 Output an arbitrary image on [GoodDisplay IL075U](https://www.good-display.com/product/404.html) e-ink display.
 
-Tested on macOS Ventura (amd64). 
+Tested on Raspberry Pi 4 (arm64), macOS Ventura (amd64). 
 
 ## Build
 
@@ -19,6 +19,10 @@ Run with `-help` flag to get all options:
 ```txt
 -device string
     device name, required, can be obtained with -list flag
+-eink-screen-refresh-pause int
+    pause for screen refresh (ms) (default 5000)
+-eink-write-data-pause int
+    pause between image chunk writing (ms) (default 1000)
 -image string
     path to image to print, required
 -image-align string
