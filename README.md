@@ -22,7 +22,7 @@ Run with `-help` flag to get all options:
 -eink-screen-refresh-pause int
     pause for screen refresh (ms) (default 5000)
 -eink-write-data-pause int
-    pause between image chunk writing (ms) (default 1000)
+    pause between image chunk writing (ms) (default 100)
 -image string
     path to image to print, required
 -image-align string
@@ -55,10 +55,6 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", GROUP="use
 Or run program with `-list` flag to list available ports with USB device info.
 
 Reboot machine.
-
-## Troubleshooting
-
-If image is not shown, try to reconnect device and run program again (it happens randomly with no visible reasons).
 
 ## Uses
 

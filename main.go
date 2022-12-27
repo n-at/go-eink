@@ -17,7 +17,7 @@ func main() {
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
 	imageDitheringAlgorithm := flag.String("image-dithering-algo", "floyd_steinberg", "dithering algorithm, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra")
 	imageDitheringThreshold := flag.Int("image-dithering-threshold", 128, "dithering threshold, 0..256")
-	einkWriteDataPause := flag.Int("eink-write-data-pause", 1000, "pause between image chunk writing (ms)")
+	einkWriteDataPause := flag.Int("eink-write-data-pause", 100, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
 	flag.Parse()
 

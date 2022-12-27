@@ -84,17 +84,17 @@ func portMode() *serial.Mode {
 	}
 }
 
-func readPortData(port serial.Port) error {
+func readPortData(port serial.Port) ([]byte, error) {
 	buf := make([]byte, 1024)
 
 	count, err := port.Read(buf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Debugf("read %d bytes: \"%s\"", count, printable(buf[:count]))
 
-	return nil
+	return buf[:count], nil
 }
 
 func writePortData(port serial.Port, data []byte) error {
