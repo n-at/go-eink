@@ -12,6 +12,7 @@ func main() {
 	verbose := flag.Bool("verbose", false, "show extended output")
 	list := flag.Bool("list", false, "show available devices and exit")
 	deviceName := flag.String("device", "", "device name, required, can be obtained with -list flag")
+	deviceMode := flag.String("device-mode", "bw", "device mode, bw - black and white (for IL075U), bwr - black, white and red (for IL075RU)")
 	imagePath := flag.String("image", "", "path to image to print, required")
 	imageEnlarge := flag.Bool("image-enlarge", false, "enlarge image to fit screen")
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
@@ -51,14 +52,28 @@ func main() {
 	}
 	img = images.Resize(img, eink.ImageWidth, eink.ImageHeight, *imageEnlarge)
 	img = images.Align(img, eink.ImageWidth, eink.ImageHeight, images.GetAlign(*imageAlign))
-	img = images.Dithering(img, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
-	imageData := images.ToImageData(img)
+
+	imgBW := images.Dithering(img, &images.PixelTransformationGrayscale{}, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
+	imageDataBW := images.ToImageData(imgBW)
+
+	imgRed := images.Dithering(img, &images.PixelTransformationRed{}, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
+	imageDataRed := images.ToImageData(imgRed)
+
+	//if err := images.Save(imgBW, "assets/_bw.png"); err != nil {
+	//	log.Fatalf("BW image save error: %s", err)
+	//}
+	//if err := images.Save(imgRed, "assets/_red.png"); err != nil {
+	//	log.Fatalf("RED image save error: %s", err)
+	//}
+	//if true {
+	//	return
+	//}
 
 	//print
 	if len(*deviceName) == 0 {
 		log.Fatal("device required")
 	}
-	if err := eink.Print(*deviceName, imageData); err != nil {
+	if err := eink.Print(*deviceName, *deviceMode, imageDataBW, imageDataRed); err != nil {
 		log.Errorf("unable to print image: %s", err)
 	}
 }

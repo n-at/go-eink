@@ -7,7 +7,9 @@ import (
 	"math"
 )
 
-func Dithering(img image.Image, multipliers [][]float64, threshold int) image.Image {
+type DitheringMultipliers [][]float64
+
+func Dithering(img image.Image, transformation PixelTransformation, multipliers DitheringMultipliers, threshold int) image.Image {
 	result := image.NewRGBA(img.Bounds())
 	width := result.Bounds().Dx()
 	height := result.Bounds().Dy()
@@ -26,10 +28,10 @@ func Dithering(img image.Image, multipliers [][]float64, threshold int) image.Im
 		for x := 0; x < width; x++ {
 			c := result.RGBAAt(x, y)
 
-			r := math.Ceil(float64(c.R) + errors[x][y][0])
-			g := math.Ceil(float64(c.G) + errors[x][y][1])
-			b := math.Ceil(float64(c.B) + errors[x][y][2])
-			gray := int(math.Ceil(0.299*r + 0.587*g + 0.114*b))
+			r := int(math.Ceil(float64(c.R) + errors[x][y][0]))
+			g := int(math.Ceil(float64(c.G) + errors[x][y][1]))
+			b := int(math.Ceil(float64(c.B) + errors[x][y][2]))
+			gray := transformation.Transform(r, g, b)
 
 			transformedColor := 0.0
 			if gray < threshold {
@@ -39,9 +41,9 @@ func Dithering(img image.Image, multipliers [][]float64, threshold int) image.Im
 				transformedColor = 255.0
 			}
 
-			redError := r - transformedColor
-			greenError := g - transformedColor
-			blueError := b - transformedColor
+			redError := float64(r) - transformedColor
+			greenError := float64(g) - transformedColor
+			blueError := float64(b) - transformedColor
 
 			for ky := 0; ky < len(multipliers); ky++ {
 				for kx := 0; kx < len(multipliers[ky]); kx++ {
@@ -105,7 +107,7 @@ var DitheringSierra = [][]float64{
 	{0.0, 2.0 / 32.0, 3.0 / 32.0, 2.0 / 32.0, 0.0},
 }
 
-func GetDitheringAlgorithm(name string) [][]float64 {
+func GetDitheringAlgorithm(name string) DitheringMultipliers {
 	switch name {
 	case "floyd_steinberg":
 		return DitheringFloydSteinberg

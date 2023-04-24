@@ -24,6 +24,9 @@ const (
 
 	DisplayModel = 0xc4 //IL075U - black and white, 7.5 inch
 	DisplayRed   = 0
+
+	DeviceModeBW  = "bw"
+	DeviceModeBWR = "bwr"
 )
 
 var (
@@ -31,14 +34,16 @@ var (
 	ScreenRefreshPause = 5000
 )
 
-func Print(portName string, imageData []byte) error {
+func Print(portName string, mode string, imageDataBW []byte, imageDataRed []byte) error {
+	//TODO print red image
+
 	//prepare data
 
-	if !imageDataValid(imageData) {
+	if !imageDataValid(imageDataBW) {
 		return errors.New("image data length mismatch")
 	}
 
-	imageData = prepareImageData(imageData)
+	imageDataBW = prepareImageData(imageDataBW)
 
 	//open port
 
@@ -77,7 +82,7 @@ func Print(portName string, imageData []byte) error {
 	//print image
 
 	for {
-		ok, err := printImage(port, imageData)
+		ok, err := printImage(port, imageDataBW)
 		if err != nil {
 			return err
 		}
