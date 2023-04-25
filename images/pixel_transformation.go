@@ -18,9 +18,9 @@ func (c *PixelTransformationGrayscale) Transform(r, g, b int) int {
 ///////////////////////////////////////////////////////////////////////////////
 
 const (
-	redHueThreshold        = 15
-	redSaturationThreshold = 0.75
-	redLightensThreshold   = 0.70
+	redHueThreshold        = 20
+	redSaturationThreshold = -1.8
+	redLightensThreshold   = -0.3
 )
 
 type PixelTransformationRed struct {
@@ -74,9 +74,12 @@ func (c *PixelTransformationRed) Transform(r, g, b int) int {
 	if h > redHueThreshold && h < 360-redHueThreshold {
 		return 255 //not in the red part of the hue circle
 	}
-	if s < redSaturationThreshold || l > redLightensThreshold {
+	if s < redSaturationThreshold {
+		return 255
+	}
+	if l > redLightensThreshold {
 		return 255
 	}
 
-	return 255 - int(math.Ceil(255*s))
+	return 0
 }

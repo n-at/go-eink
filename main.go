@@ -66,6 +66,16 @@ func main() {
 	imgRW := images.Dithering(img, &images.PixelTransformationRed{}, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
 	imageDataRW := images.ToImageData(imgRW)
 
+	//if err := images.Save(imgBW, "assets/_bw.png"); err != nil {
+	//	log.Fatalf("BW image save error: %s", err)
+	//}
+	//if err := images.Save(imgRW, "assets/_red.png"); err != nil {
+	//	log.Fatalf("RED image save error: %s", err)
+	//}
+	//if true {
+	//	return
+	//}
+
 	//print
 
 	if *deviceMode == eink.DeviceModeBW {
