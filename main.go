@@ -12,7 +12,7 @@ func main() {
 	verbose := flag.Bool("verbose", false, "show extended output")
 	list := flag.Bool("list", false, "show available devices and exit")
 	deviceName := flag.String("device", "", "device name, required, can be obtained with -list flag")
-	deviceMode := flag.String("device-mode", "bw", "device mode, bw - black and white (for IL075U), bwr - black, white and red (for IL075RU)")
+	deviceMode := flag.String("device-mode", "bw", "device mode, bw - black and white (IL075U, IL075RU), bwr - black, white and red (IL075RU)")
 	imagePath := flag.String("image", "", "path to image to print, required")
 	imageEnlarge := flag.Bool("image-enlarge", false, "enlarge image to fit screen")
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
@@ -23,6 +23,7 @@ func main() {
 	flag.Parse()
 
 	//prepare logger
+
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
@@ -37,12 +38,18 @@ func main() {
 	eink.ScreenRefreshPause = *einkScreenRefreshPause
 
 	//list devices
+
 	if *list {
 		eink.EnumerateDevicesExtended()
 		return
 	}
 
+	if len(*deviceName) == 0 {
+		log.Fatal("device required")
+	}
+
 	//prepare imagePath
+
 	if len(*imagePath) == 0 {
 		log.Fatal("image required")
 	}
@@ -56,24 +63,20 @@ func main() {
 	imgBW := images.Dithering(img, &images.PixelTransformationGrayscale{}, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
 	imageDataBW := images.ToImageData(imgBW)
 
-	imgRed := images.Dithering(img, &images.PixelTransformationRed{}, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
-	imageDataRed := images.ToImageData(imgRed)
-
-	//if err := images.Save(imgBW, "assets/_bw.png"); err != nil {
-	//	log.Fatalf("BW image save error: %s", err)
-	//}
-	//if err := images.Save(imgRed, "assets/_red.png"); err != nil {
-	//	log.Fatalf("RED image save error: %s", err)
-	//}
-	//if true {
-	//	return
-	//}
+	imgRW := images.Dithering(img, &images.PixelTransformationRed{}, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
+	imageDataRW := images.ToImageData(imgRW)
 
 	//print
-	if len(*deviceName) == 0 {
-		log.Fatal("device required")
-	}
-	if err := eink.Print(*deviceName, *deviceMode, imageDataBW, imageDataRed); err != nil {
-		log.Errorf("unable to print image: %s", err)
+
+	if *deviceMode == eink.DeviceModeBW {
+		if err := eink.PrintBW(*deviceName, imageDataBW); err != nil {
+			log.Fatalf("unable to print image: %s", err)
+		}
+	} else if *deviceMode == eink.DeviceModeBWR {
+		if err := eink.PrintBWR(*deviceName, imageDataBW, imageDataRW); err != nil {
+			log.Fatalf("imable to print image: %s", err)
+		}
+	} else {
+		log.Fatalf("unknown device-mode: %s", *deviceMode)
 	}
 }

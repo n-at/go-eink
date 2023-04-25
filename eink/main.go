@@ -5,8 +5,6 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"go.bug.st/serial"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -22,8 +20,7 @@ const (
 	ImageWidth  = 800
 	ImageHeight = 480
 
-	DisplayModel = 0xc4 //IL075U - black and white, 7.5 inch
-	DisplayRed   = 0
+	DisplayModel = 0xc4 //IL075U(R) - black and white (or black, white, red), 7.5 inch
 
 	DeviceModeBW  = "bw"
 	DeviceModeBWR = "bwr"
@@ -34,46 +31,28 @@ var (
 	ScreenRefreshPause = 5000
 )
 
-func Print(portName string, mode string, imageDataBW []byte, imageDataRed []byte) error {
-	//TODO print red image
+///////////////////////////////////////////////////////////////////////////////
 
+func PrintBW(portName string, imageData []byte) error {
 	//prepare data
 
-	if !imageDataValid(imageDataBW) {
+	if !imageDataValid(imageData) {
 		return errors.New("image data length mismatch")
 	}
 
-	imageDataBW = prepareImageData(imageDataBW)
+	imageData = prepareImageDataBW(imageData)
 
 	//open port
 
-	log.Debug("test port")
-	if err := testPort(portName); err != nil {
-		return errors.New(fmt.Sprintf("unable to test port: %s", err))
-	}
-
-	log.Debug("open port")
-	port, err := serial.Open(portName, portMode())
+	port, err := preparePort(portName)
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to open port %s: %s", portName, err))
-	}
-
-	//setup port
-
-	log.Debug("set port RTS")
-	if err := port.SetRTS(true); err != nil {
-		return errors.New(fmt.Sprintf("unable to set RTS: %s", err))
-	}
-
-	log.Debug("set port read timeout")
-	if err := port.SetReadTimeout(serial.NoTimeout); err != nil {
-		return errors.New(fmt.Sprintf("unable to reset read timeout: %s", err))
+		return err
 	}
 
 	//handshake
 
 	log.Debug("handshake")
-	if err := handshake(port); err != nil {
+	if err := handshake(port, DisplayModel, 0); err != nil {
 		return errors.New(fmt.Sprintf("unable to handshake: %s", err))
 	} else {
 		log.Info("handshake ok")
@@ -81,23 +60,74 @@ func Print(portName string, mode string, imageDataBW []byte, imageDataRed []byte
 
 	//print image
 
-	for {
-		ok, err := printImage(port, imageDataBW)
-		if err != nil {
-			return err
-		}
-		if ok {
-			log.Info("done")
-			return nil
-		} else {
-			log.Info("print failed, retrying")
-		}
-	}
+	return printImageCycle(port, imageData)
 }
 
-func handshake(port serial.Port) error {
+func PrintBWR(portName string, imageDataBW []byte, imageDataRW []byte) error {
+	//prepare data
+
+	if !imageDataValid(imageDataBW) {
+		return errors.New("BW image data length mismatch")
+	}
+	if !imageDataValid(imageDataRW) {
+		return errors.New("RW image data length mismatch")
+	}
+
+	imageData := prepareImageDataBWR(imageDataBW, imageDataRW)
+
+	//open port
+
+	port, err := preparePort(portName)
+	if err != nil {
+		return err
+	}
+
+	//handshake
+
+	log.Debug("handshake")
+	if err := handshake(port, DisplayModel, 1); err != nil {
+		return errors.New(fmt.Sprintf("unable to handshake: %s", err))
+	} else {
+		log.Info("handshake ok")
+	}
+
+	//print image
+
+	return printImageCycle(port, imageData)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+func preparePort(portName string) (serial.Port, error) {
+	log.Debug("test port")
+	if err := testPort(portName); err != nil {
+		return nil, errors.New(fmt.Sprintf("unable to test port: %s", err))
+	}
+
+	log.Debug("open port")
+	port, err := serial.Open(portName, portMode())
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("unable to open port %s: %s", portName, err))
+	}
+
+	//setup port
+
+	log.Debug("set port RTS")
+	if err := port.SetRTS(true); err != nil {
+		return nil, errors.New(fmt.Sprintf("unable to set RTS: %s", err))
+	}
+
+	log.Debug("set port read timeout")
+	if err := port.SetReadTimeout(serial.NoTimeout); err != nil {
+		return nil, errors.New(fmt.Sprintf("unable to reset read timeout: %s", err))
+	}
+
+	return port, nil
+}
+
+func handshake(port serial.Port, displayModel, displayRed byte) error {
 	log.Debug("send handshake request")
-	if _, err := port.Write(handshakeRequest()); err != nil {
+	if _, err := port.Write(handshakeRequest(displayModel, displayRed)); err != nil {
 		return errors.New(fmt.Sprintf("unable to send handshake request: %s", err))
 	}
 
@@ -117,6 +147,21 @@ func handshake(port serial.Port) error {
 	}
 
 	return nil
+}
+
+func printImageCycle(port serial.Port, imageData []byte) error {
+	for {
+		ok, err := printImage(port, imageData)
+		if err != nil {
+			return err
+		}
+		if ok {
+			log.Info("done")
+			return nil
+		} else {
+			log.Info("print failed, retrying")
+		}
+	}
 }
 
 func printImage(port serial.Port, imageData []byte) (bool, error) {
@@ -160,18 +205,13 @@ func printImage(port serial.Port, imageData []byte) (bool, error) {
 		return false, errors.New(fmt.Sprintf("unable to read data: %s", err))
 	}
 
-	parts := strings.Split(string(remaining), "=")
-	if len(parts) != 2 {
-		return false, errors.New("malformed remaining data received")
-	}
-
-	bytesReceived, err := strconv.Atoi(parts[1])
+	bytesReceived, err := extractReceivedBytes(remaining)
 	if err != nil {
-		return false, errors.New(fmt.Sprintf("unable to read bytes received count: %s", err))
+		return false, err
 	}
 
 	log.Debugf("bytes received: %d", bytesReceived)
-	if bytesReceived != (ImageHeight*ImageWidth)/8 {
+	if bytesReceived != len(imageData) {
 		return false, nil
 	}
 

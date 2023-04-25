@@ -2,14 +2,16 @@ package eink
 
 import (
 	"errors"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"go.bug.st/serial"
+	"strconv"
 	"strings"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
 
-func handshakeRequest() []byte {
+func handshakeRequest(displayModel, displayRed byte) []byte {
 	request := make([]byte, 12)
 	request[0] = 0xaa
 	request[1] = 0x55
@@ -17,8 +19,8 @@ func handshakeRequest() []byte {
 	request[3] = ((ImageWidth * ImageHeight) / 8) / 256
 	request[4] = ((ImageWidth * ImageHeight) / 8) % 256
 	request[5] = 0
-	request[6] = DisplayModel
-	request[7] = DisplayRed
+	request[6] = displayModel
+	request[7] = displayRed
 
 	sum := 0
 	for i := 0; i < 8; i++ {
@@ -110,7 +112,7 @@ func imageDataValid(imageData []byte) bool {
 	return len(imageData) == (ImageHeight*ImageWidth)/8
 }
 
-func prepareImageData(imageData []byte) []byte {
+func prepareImageDataBW(imageData []byte) []byte {
 	prepared := make([]byte, len(imageData))
 
 	for idx := 0; idx < len(imageData); idx++ {
@@ -122,6 +124,45 @@ func prepareImageData(imageData []byte) []byte {
 	}
 
 	return prepared
+}
+
+func prepareImageDataBWR(imageDataBW, imageDataRW []byte) []byte {
+	prepared := make([]byte, len(imageDataBW)+len(imageDataRW))
+	offset := 0
+
+	for idx := 0; idx < len(imageDataBW); idx++ {
+		if imageDataBW[idx] == 13 {
+			prepared[idx+offset] = 12
+		} else {
+			prepared[idx+offset] = imageDataBW[idx]
+		}
+	}
+
+	offset += len(imageDataBW)
+
+	for idx := 0; idx < len(imageDataRW); idx++ {
+		if imageDataRW[idx] == 13 {
+			prepared[idx+offset] = 12
+		} else {
+			prepared[idx+offset] = imageDataRW[idx]
+		}
+	}
+
+	return prepared
+}
+
+func extractReceivedBytes(data []byte) (int, error) {
+	parts := strings.Split(string(data), "=")
+	if len(parts) != 2 {
+		return 0, errors.New("malformed data")
+	}
+
+	bytesReceived, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, errors.New(fmt.Sprintf("unable to read bytes data count: %s", err))
+	}
+
+	return bytesReceived, nil
 }
 
 func printable(buf []byte) string {

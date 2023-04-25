@@ -1,8 +1,13 @@
 # image to e-ink
 
-Output an arbitrary image on [GoodDisplay IL075U](https://www.good-display.com/product/404.html) e-ink display.
+Output an arbitrary image on 
+[GoodDisplay IL075U](https://www.good-display.com/product/404.html) (black and white)
+[GoodDisplay IL075RU](https://www.good-display.com/product/418.html) (black, white and red)
+e-ink displays.
 
-Tested on Raspberry Pi 4 (arm64), macOS Ventura (amd64). 
+IL075RU can work in both modes - color and monochrome.
+
+Tested on Raspberry Pi 4 (arm64), macOS Ventura (amd64, arm64). 
 
 ## Build
 
@@ -19,6 +24,8 @@ Run with `-help` flag to get all options:
 ```txt
 -device string
     device name, required, can be obtained with -list flag
+-device-mode string
+    device mode, bw - black and white (IL075U, IL075RU), bwr - black, white and red (IL075RU) (default "bw")
 -eink-screen-refresh-pause int
     pause for screen refresh (ms) (default 5000)
 -eink-write-data-pause int
