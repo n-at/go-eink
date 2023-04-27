@@ -18,9 +18,10 @@ func main() {
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
 	imageDitheringAlgorithm := flag.String("image-dithering-algo", "floyd_steinberg", "dithering algorithm, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra")
 	imageDitheringThreshold := flag.Int("image-dithering-threshold", 128, "dithering threshold, 0..256")
-	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 30, "hue threshold for color image (degrees)")
-	imageRedSaturationThreshold := flag.Int("image-red-saturation-threshold", 80, "saturation threshold for color image (%)")
-	imageRedLightnessThreshold := flag.Int("image-red-lighness-threshold", 50, "lightness threshold for color image (%)")
+	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 30, "hue threshold for red image (degrees)")
+	imageRedSaturationThreshold := flag.Int("image-red-saturation-threshold", 80, "saturation threshold for red image (%)")
+	imageRedLightnessThreshold := flag.Int("image-red-lighness-threshold", 50, "lightness threshold for red image (%)")
+	imageSubtract := flag.String("image-subtract", "none", "subtract images (none - keep both, black - subtract black-and-white from red, red - subtract red from black-and-white)")
 	einkWriteDataPause := flag.Int("eink-write-data-pause", 300, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
 	flag.Parse()
@@ -69,7 +70,6 @@ func main() {
 		Threshold: *imageDitheringThreshold,
 	}
 	imgBW := images.Dithering(img, transformBW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
-	imageDataBW := images.ToImageData(imgBW)
 
 	transformRW := &images.PixelTransformationRed{
 		Threshold:              *imageDitheringThreshold,
@@ -78,17 +78,16 @@ func main() {
 		RedLightnessThreshold:  *imageRedLightnessThreshold,
 	}
 	imgRW := images.Dithering(img, transformRW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
-	imageDataRW := images.ToImageData(imgRW)
 
-	//if err := images.Save(imgBW, "assets/_bw.png"); err != nil {
-	//	log.Fatalf("BW image save error: %s", err)
-	//}
-	//if err := images.Save(imgRW, "assets/_red.png"); err != nil {
-	//	log.Fatalf("RED image save error: %s", err)
-	//}
-	//if true {
-	//	return
-	//}
+	switch *imageSubtract {
+	case images.SubtractBlack:
+		imgRW = images.Subtract(imgRW, imgBW)
+	case images.SubtractRed:
+		imgBW = images.Subtract(imgBW, imgRW)
+	}
+
+	imageDataBW := images.ToImageData(imgBW)
+	imageDataRW := images.ToImageData(imgRW)
 
 	//print
 

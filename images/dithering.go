@@ -13,7 +13,7 @@ func Dithering(img image.Image, transformation PixelTransformation, multipliers 
 	result := image.NewRGBA(img.Bounds())
 	width := result.Bounds().Dx()
 	height := result.Bounds().Dy()
-	draw.Draw(result, result.Bounds(), img, image.Point{0, 0}, draw.Src)
+	draw.Draw(result, result.Bounds(), img, image.Point{X: 0, Y: 0}, draw.Src)
 
 	var errors [][][]float64
 	for x := 0; x < width; x++ {
