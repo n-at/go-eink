@@ -21,7 +21,7 @@ func main() {
 	imageDitheringThreshold := flag.Int("image-dithering-threshold", 128, "dithering threshold, 0..256")
 	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 30, "hue threshold for red image (degrees)")
 	imageRedSaturationThreshold := flag.Int("image-red-saturation-threshold", 80, "saturation threshold for red image (%)")
-	imageRedLightnessThreshold := flag.Int("image-red-lighness-threshold", 50, "lightness threshold for red image (%)")
+	imageRedLightnessThreshold := flag.Int("image-red-lightness-threshold", 50, "lightness threshold for red image (%)")
 	imageSubtract := flag.String("image-subtract", "none", "subtract images, one of: none (keep both), black (subtract black-and-white from red), red (subtract red from black-and-white)")
 	einkWriteDataPause := flag.Int("eink-write-data-pause", 300, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")

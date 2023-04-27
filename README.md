@@ -42,7 +42,7 @@ Run with `-help` flag to get all options:
         enlarge image to fit screen
   -image-red-hue-threshold int
         hue threshold for red image (degrees) (default 30)
-  -image-red-lighness-threshold int
+  -image-red-lightness-threshold int
         lightness threshold for red image (%) (default 50)
   -image-red-saturation-threshold int
         saturation threshold for red image (%) (default 80)
