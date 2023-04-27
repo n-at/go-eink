@@ -18,7 +18,10 @@ func main() {
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
 	imageDitheringAlgorithm := flag.String("image-dithering-algo", "floyd_steinberg", "dithering algorithm, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra")
 	imageDitheringThreshold := flag.Int("image-dithering-threshold", 128, "dithering threshold, 0..256")
-	einkWriteDataPause := flag.Int("eink-write-data-pause", 100, "pause between image chunk writing (ms)")
+	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 30, "hue threshold for color image (degrees)")
+	imageRedSaturationThreshold := flag.Int("image-red-saturation-threshold", 80, "saturation threshold for color image (%)")
+	imageRedLightnessThreshold := flag.Int("image-red-lighness-threshold", 50, "lightness threshold for color image (%)")
+	einkWriteDataPause := flag.Int("eink-write-data-pause", 300, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
 	flag.Parse()
 
@@ -34,6 +37,8 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 
+	//prepare settings
+
 	eink.WriteDataPause = *einkWriteDataPause
 	eink.ScreenRefreshPause = *einkScreenRefreshPause
 
@@ -48,7 +53,7 @@ func main() {
 		log.Fatal("device required")
 	}
 
-	//prepare imagePath
+	//prepare image
 
 	if len(*imagePath) == 0 {
 		log.Fatal("image required")
@@ -60,10 +65,19 @@ func main() {
 	img = images.Resize(img, eink.ImageWidth, eink.ImageHeight, *imageEnlarge)
 	img = images.Align(img, eink.ImageWidth, eink.ImageHeight, images.GetAlign(*imageAlign))
 
-	imgBW := images.Dithering(img, &images.PixelTransformationGrayscale{}, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
+	transformBW := &images.PixelTransformationGrayscale{
+		Threshold: *imageDitheringThreshold,
+	}
+	imgBW := images.Dithering(img, transformBW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
 	imageDataBW := images.ToImageData(imgBW)
 
-	imgRW := images.Dithering(img, &images.PixelTransformationRed{}, images.GetDitheringAlgorithm(*imageDitheringAlgorithm), *imageDitheringThreshold)
+	transformRW := &images.PixelTransformationRed{
+		Threshold:              *imageDitheringThreshold,
+		RedHueThreshold:        *imageRedHueThreshold,
+		RedSaturationThreshold: *imageRedSaturationThreshold,
+		RedLightnessThreshold:  *imageRedLightnessThreshold,
+	}
+	imgRW := images.Dithering(img, transformRW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
 	imageDataRW := images.ToImageData(imgRW)
 
 	//if err := images.Save(imgBW, "assets/_bw.png"); err != nil {

@@ -4,29 +4,37 @@ import "math"
 
 type PixelTransformation interface {
 	Transform(r, g, b int) int
+	GetThreshold() int
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 type PixelTransformationGrayscale struct {
+	Threshold int
 }
 
 func (c *PixelTransformationGrayscale) Transform(r, g, b int) int {
 	return int(math.Ceil(0.299*float64(r) + 0.587*float64(g) + 0.114*float64(b)))
 }
 
+func (c *PixelTransformationGrayscale) GetThreshold() int {
+	return c.Threshold
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
-const (
-	redHueThreshold        = 20
-	redSaturationThreshold = -1.8
-	redLightensThreshold   = -0.3
-)
-
 type PixelTransformationRed struct {
+	Threshold              int
+	RedHueThreshold        int
+	RedSaturationThreshold int
+	RedLightnessThreshold  int
 }
 
 func (c *PixelTransformationRed) Transform(r, g, b int) int {
+	r = min(255, max(0, r))
+	g = min(255, max(0, g))
+	b = min(255, max(0, b))
+
 	var h, s, l float64
 
 	rf := float64(r) / 255.0
@@ -68,18 +76,21 @@ func (c *PixelTransformationRed) Transform(r, g, b int) int {
 	case h > 1:
 		h -= 1
 	}
-
 	h *= 360.0
 
-	if h > redHueThreshold && h < 360-redHueThreshold {
+	if h > float64(c.RedHueThreshold)/2.0 && h < 360-float64(c.RedHueThreshold)/2.0 {
 		return 255 //not in the red part of the hue circle
 	}
-	if s < redSaturationThreshold {
+	if s < float64(c.RedSaturationThreshold)/100.0 {
 		return 255
 	}
-	if l > redLightensThreshold {
+	if l > float64(c.RedLightnessThreshold)/100.0 {
 		return 255
 	}
 
 	return 0
+}
+
+func (c *PixelTransformationRed) GetThreshold() int {
+	return c.Threshold
 }

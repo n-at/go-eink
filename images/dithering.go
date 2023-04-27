@@ -9,7 +9,7 @@ import (
 
 type DitheringMultipliers [][]float64
 
-func Dithering(img image.Image, transformation PixelTransformation, multipliers DitheringMultipliers, threshold int) image.Image {
+func Dithering(img image.Image, transformation PixelTransformation, multipliers DitheringMultipliers) image.Image {
 	result := image.NewRGBA(img.Bounds())
 	width := result.Bounds().Dx()
 	height := result.Bounds().Dy()
@@ -34,7 +34,7 @@ func Dithering(img image.Image, transformation PixelTransformation, multipliers 
 			gray := transformation.Transform(r, g, b)
 
 			transformedColor := 0.0
-			if gray < threshold {
+			if gray < transformation.GetThreshold() {
 				result.Set(x, y, color.Black)
 			} else {
 				result.Set(x, y, color.White)
