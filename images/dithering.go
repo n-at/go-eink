@@ -28,9 +28,9 @@ func Dithering(img image.Image, transformation PixelTransformation, multipliers 
 		for x := 0; x < width; x++ {
 			c := result.RGBAAt(x, y)
 
-			r := int(math.Ceil(float64(c.R) + errors[x][y][0]))
-			g := int(math.Ceil(float64(c.G) + errors[x][y][1]))
-			b := int(math.Ceil(float64(c.B) + errors[x][y][2]))
+			r := max(0, min(255, int(math.Ceil(float64(c.R)+errors[x][y][0]))))
+			g := max(0, min(255, int(math.Ceil(float64(c.G)+errors[x][y][1]))))
+			b := max(0, min(255, int(math.Ceil(float64(c.B)+errors[x][y][2]))))
 			gray := transformation.Transform(r, g, b)
 
 			transformedColor := 0.0
@@ -41,9 +41,9 @@ func Dithering(img image.Image, transformation PixelTransformation, multipliers 
 				transformedColor = 255.0
 			}
 
-			redError := float64(r) - transformedColor
-			greenError := float64(g) - transformedColor
-			blueError := float64(b) - transformedColor
+			redError := float64(gray) - transformedColor
+			greenError := float64(gray) - transformedColor
+			blueError := float64(gray) - transformedColor
 
 			for ky := 0; ky < len(multipliers); ky++ {
 				for kx := 0; kx < len(multipliers[ky]); kx++ {

@@ -88,7 +88,7 @@ func (c *PixelTransformationRed) Transform(r, g, b int) int {
 		return 255
 	}
 
-	return 0
+	return int(128 * s)
 }
 
 func (c *PixelTransformationRed) GetThreshold() int {
