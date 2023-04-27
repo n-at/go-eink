@@ -11,8 +11,9 @@ import (
 func main() {
 	verbose := flag.Bool("verbose", false, "show extended output")
 	list := flag.Bool("list", false, "show available devices and exit")
+	output := flag.String("output", "", "output result to file and exit")
 	deviceName := flag.String("device", "", "device name, required, can be obtained with -list flag")
-	deviceMode := flag.String("device-mode", "bw", "device mode, bw - black and white (IL075U, IL075RU), bwr - black, white and red (IL075RU)")
+	deviceMode := flag.String("device-mode", "bw", "device mode, one of: bw (black and white for IL075U, IL075RU), bwr (black, white and red for IL075RU)")
 	imagePath := flag.String("image", "", "path to image to print, required")
 	imageEnlarge := flag.Bool("image-enlarge", false, "enlarge image to fit screen")
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
@@ -21,7 +22,7 @@ func main() {
 	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 30, "hue threshold for red image (degrees)")
 	imageRedSaturationThreshold := flag.Int("image-red-saturation-threshold", 80, "saturation threshold for red image (%)")
 	imageRedLightnessThreshold := flag.Int("image-red-lighness-threshold", 50, "lightness threshold for red image (%)")
-	imageSubtract := flag.String("image-subtract", "none", "subtract images (none - keep both, black - subtract black-and-white from red, red - subtract red from black-and-white)")
+	imageSubtract := flag.String("image-subtract", "none", "subtract images, one of: none (keep both), black (subtract black-and-white from red), red (subtract red from black-and-white)")
 	einkWriteDataPause := flag.Int("eink-write-data-pause", 300, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
 	flag.Parse()
@@ -48,10 +49,6 @@ func main() {
 	if *list {
 		eink.EnumerateDevicesExtended()
 		return
-	}
-
-	if len(*deviceName) == 0 {
-		log.Fatal("device required")
 	}
 
 	//prepare image
@@ -89,7 +86,23 @@ func main() {
 	imageDataBW := images.ToImageData(imgBW)
 	imageDataRW := images.ToImageData(imgRW)
 
+	//output?
+
+	if len(*output) > 0 {
+		if *deviceMode == eink.DeviceModeBWR {
+			imgBW = images.Join(imgBW, imgRW)
+		}
+		if err := images.Save(imgBW, *output); err != nil {
+			log.Fatalf("unable to save image: %s", err)
+		}
+		return
+	}
+
 	//print
+
+	if len(*deviceName) == 0 {
+		log.Fatal("device required")
+	}
 
 	if *deviceMode == eink.DeviceModeBW {
 		if err := eink.PrintBW(*deviceName, imageDataBW); err != nil {

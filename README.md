@@ -22,28 +22,38 @@ go build -a -o app
 Run with `-help` flag to get all options:
 
 ```txt
--device string
-    device name, required, can be obtained with -list flag
--device-mode string
-    device mode, bw - black and white (IL075U, IL075RU), bwr - black, white and red (IL075RU) (default "bw")
--eink-screen-refresh-pause int
-    pause for screen refresh (ms) (default 5000)
--eink-write-data-pause int
-    pause between image chunk writing (ms) (default 100)
--image string
-    path to image to print, required
--image-align string
-    image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right (default "middle")
--image-dithering-algo string
-    dithering algorithm, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra (default "floyd_steinberg")
--image-dithering-threshold int
-    dithering threshold, 0..256 (default 128)
--image-enlarge
-    enlarge image to fit screen
--list
-    show available devices and exit
--verbose
-    show extended output
+  -device string
+        device name, required, can be obtained with -list flag
+  -device-mode string
+        device mode, one of: bw (black and white for IL075U, IL075RU), bwr (black, white and red for IL075RU) (default "bw")
+  -eink-screen-refresh-pause int
+        pause for screen refresh (ms) (default 5000)
+  -eink-write-data-pause int
+        pause between image chunk writing (ms) (default 300)
+  -image string
+        path to image to print, required
+  -image-align string
+        image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right (default "middle")
+  -image-dithering-algo string
+        dithering algorithm, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra (default "floyd_steinberg")
+  -image-dithering-threshold int
+        dithering threshold, 0..256 (default 128)
+  -image-enlarge
+        enlarge image to fit screen
+  -image-red-hue-threshold int
+        hue threshold for red image (degrees) (default 30)
+  -image-red-lighness-threshold int
+        lightness threshold for red image (%) (default 50)
+  -image-red-saturation-threshold int
+        saturation threshold for red image (%) (default 80)
+  -image-subtract string
+        subtract images, one of: none (keep both), black (subtract black-and-white from red), red (subtract red from black-and-white) (default "none")
+  -list
+        show available devices and exit
+  -output string
+        output result to file and exit
+  -verbose
+        show extended output
 ```
 
 ## Linux USB permissions
