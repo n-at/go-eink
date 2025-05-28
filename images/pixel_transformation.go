@@ -1,6 +1,8 @@
 package images
 
-import "math"
+import (
+	"math"
+)
 
 type PixelTransformation interface {
 	Transform(r, g, b int) int
@@ -31,6 +33,67 @@ type PixelTransformationRed struct {
 }
 
 func (c *PixelTransformationRed) Transform(r, g, b int) int {
+	h, s, l := RgbToHsl(r, g, b)
+	if h == 0 && s == 0 {
+		return 255 //gray
+	}
+
+	//red: h = 0 or 360
+
+	if h > float64(c.RedHueThreshold)/2.0 && h < 360-float64(c.RedHueThreshold)/2.0 {
+		return 255 //not in the red part of the hue circle
+	}
+	if s < float64(c.RedSaturationThreshold) {
+		return 255
+	}
+	if l > float64(c.RedLightnessThreshold) {
+		return 255
+	}
+
+	return int(255 * s / 100.0)
+}
+
+func (c *PixelTransformationRed) GetThreshold() int {
+	return c.Threshold
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+type PixelTransformationYellow struct {
+	Threshold                 int
+	YellowHueThreshold        int
+	YellowSaturationThreshold int
+	YellowLightnessThreshold  int
+}
+
+func (c *PixelTransformationYellow) Transform(r, g, b int) int {
+	h, s, l := RgbToHsl(r, g, b)
+	if h == 0 && s == 0 {
+		return 255 //gray
+	}
+
+	//yellow: h = 65
+
+	if h > (65.0+float64(c.YellowHueThreshold)/2.0) || h < (65.0-float64(c.YellowHueThreshold)/2.0) {
+		return 255
+	}
+	if s < float64(c.YellowSaturationThreshold) {
+		return 255
+	}
+	if l > float64(c.YellowLightnessThreshold) {
+		return 255
+	}
+
+	return int(255 * s / 100.0)
+}
+
+func (c *PixelTransformationYellow) GetThreshold() int {
+	return c.Threshold
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+func RgbToHsl(r, g, b int) (float64, float64, float64) {
 	r = min(255, max(0, r))
 	g = min(255, max(0, g))
 	b = min(255, max(0, b))
@@ -49,7 +112,7 @@ func (c *PixelTransformationRed) Transform(r, g, b int) int {
 
 	d := max - min
 	if d == 0 {
-		return 255 //gray
+		return 0, 0, l * 100.0 //gray
 	}
 
 	if l < 0.5 {
@@ -61,6 +124,7 @@ func (c *PixelTransformationRed) Transform(r, g, b int) int {
 	r2 := (((max - rf) / 6) + (d / 2)) / d
 	g2 := (((max - gf) / 6) + (d / 2)) / d
 	b2 := (((max - bf) / 6) + (d / 2)) / d
+
 	switch {
 	case rf == max:
 		h = b2 - g2
@@ -76,38 +140,5 @@ func (c *PixelTransformationRed) Transform(r, g, b int) int {
 	case h > 1:
 		h -= 1
 	}
-	h *= 360.0
-
-	if h > float64(c.RedHueThreshold)/2.0 && h < 360-float64(c.RedHueThreshold)/2.0 {
-		return 255 //not in the red part of the hue circle
-	}
-	if s < float64(c.RedSaturationThreshold)/100.0 {
-		return 255
-	}
-	if l > float64(c.RedLightnessThreshold)/100.0 {
-		return 255
-	}
-
-	return int(128 * s)
-}
-
-func (c *PixelTransformationRed) GetThreshold() int {
-	return c.Threshold
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-type PixelTransformationYellow struct {
-	Threshold                 int
-	YellowHueThreshold        int
-	YellowSaturationThreshold int
-	YellowLightnessThreshold  int
-}
-
-func (c *PixelTransformationYellow) Transform(r, g, b int) int {
-	return 0 //TODO
-}
-
-func (c *PixelTransformationYellow) GetThreshold() int {
-	return c.Threshold
+	return h * 360.0, s * 100.0, l * 100.0
 }
