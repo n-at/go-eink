@@ -11,7 +11,7 @@ Tested on Raspberry Pi 4 (arm64), macOS Ventura (amd64, arm64).
 
 ## Build
 
-Go 1.19+ required.
+Go 1.24+ required.
 
 ```bash
 go build -a -o app
