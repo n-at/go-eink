@@ -3,9 +3,10 @@ package eink
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	log "github.com/sirupsen/logrus"
 	"go.bug.st/serial"
-	"time"
 )
 
 const (
@@ -22,8 +23,9 @@ const (
 
 	DisplayModel = 0xc4 //IL075U(R) - black and white (or black, white, red), 7.5 inch
 
-	DeviceModeBW  = "bw"
-	DeviceModeBWR = "bwr"
+	DeviceModeBW   = "bw"
+	DeviceModeBWR  = "bwr"
+	DeviceModeBWRY = "bwry"
 )
 
 var (
@@ -63,7 +65,7 @@ func PrintBW(portName string, imageData []byte) error {
 	return printImageCycle(port, imageData)
 }
 
-func PrintBWR(portName string, imageDataBW []byte, imageDataRW []byte) error {
+func PrintBWR(portName string, imageDataBW, imageDataRW []byte) error {
 	//prepare data
 
 	if !imageDataValid(imageDataBW) {
@@ -94,6 +96,10 @@ func PrintBWR(portName string, imageDataBW []byte, imageDataRW []byte) error {
 	//print image
 
 	return printImageCycle(port, imageData)
+}
+
+func PrintBWRY(portName string, imageDataBW, imageDataRW, imageDataYW []byte) error {
+	return errors.New("not implemented") //TODO
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
-	log "github.com/sirupsen/logrus"
 	"go-eink/eink"
 	"go-eink/images"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -13,7 +14,7 @@ func main() {
 	list := flag.Bool("list", false, "show available devices and exit")
 	output := flag.String("output", "", "output result to file and exit")
 	deviceName := flag.String("device", "", "device name, required, can be obtained with -list flag")
-	deviceMode := flag.String("device-mode", "bw", "device mode, one of: bw (black and white for IL075U, IL075RU), bwr (black, white and red for IL075RU)")
+	deviceMode := flag.String("device-mode", "bw", "device mode, one of: bw (black and white for IL075U, IL075RU, GDP075FU1), bwr (black, white and red for IL075RU, GDP075FU1), bwry (black, white, red and yellow for GDP075FU1)")
 	imagePath := flag.String("image", "", "path to image to print, required")
 	imageEnlarge := flag.Bool("image-enlarge", false, "enlarge image to fit screen")
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
@@ -22,7 +23,10 @@ func main() {
 	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 25, "hue threshold for red image (degrees)")
 	imageRedSaturationThreshold := flag.Int("image-red-saturation-threshold", 40, "saturation threshold for red image (%)")
 	imageRedLightnessThreshold := flag.Int("image-red-lightness-threshold", 80, "lightness threshold for red image (%)")
-	imageSubtract := flag.String("image-subtract", "none", "subtract images, one of: none (keep both), black (subtract black-and-white from red), red (subtract red from black-and-white)")
+	imageYellowHueThreshold := flag.Int("image-yellow-hue-threshold", 25, "hue threshold for yellow image (degrees)")
+	imageYellowSaturationThreshold := flag.Int("image-yellow-saturation-threshold", 40, "saturation threshold for yellow image (%)")
+	imageYellowLightnessThreshold := flag.Int("image-yellow-lightness-threshold", 80, "lightness threshold for yellow image (%)")
+	//TODO replace with image composition order // imageSubtract := flag.String("image-subtract", "none", "subtract images, one of: none (keep all), black (subtract black-and-white from red), red (subtract red from black-and-white)")
 	einkWriteDataPause := flag.Int("eink-write-data-pause", 300, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
 	flag.Parse()
@@ -76,21 +80,23 @@ func main() {
 	}
 	imgRW := images.Dithering(img, transformRW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
 
-	switch *imageSubtract {
-	case images.SubtractBlack:
-		imgRW = images.Subtract(imgRW, imgBW)
-	case images.SubtractRed:
-		imgBW = images.Subtract(imgBW, imgRW)
+	transformYW := &images.PixelTransformationYellow{
+		Threshold:                 *imageYellowHueThreshold,
+		YellowHueThreshold:        *imageYellowHueThreshold,
+		YellowSaturationThreshold: *imageYellowSaturationThreshold,
+		YellowLightnessThreshold:  *imageYellowLightnessThreshold,
 	}
-
-	imageDataBW := images.ToImageData(imgBW)
-	imageDataRW := images.ToImageData(imgRW)
+	imgYW := images.Dithering(img, transformYW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
 
 	//output?
 
 	if len(*output) > 0 {
 		if *deviceMode == eink.DeviceModeBWR {
 			imgBW = images.Join(imgBW, imgRW)
+		}
+		if *deviceMode == eink.DeviceModeBWRY {
+			imgBW = images.Join(imgBW, imgRW)
+			imgBW = images.Join(imgBW, imgYW)
 		}
 		if err := images.Save(imgBW, *output); err != nil {
 			log.Fatalf("unable to save image: %s", err)
@@ -100,17 +106,25 @@ func main() {
 
 	//print
 
+	imageDataBW := images.ToImageData(imgBW)
+	imageDataRW := images.ToImageData(imgRW)
+	imageDataYW := images.ToImageData(imgYW)
+
 	if len(*deviceName) == 0 {
 		log.Fatal("device required")
 	}
 
 	if *deviceMode == eink.DeviceModeBW {
 		if err := eink.PrintBW(*deviceName, imageDataBW); err != nil {
-			log.Fatalf("unable to print image: %s", err)
+			log.Fatalf("unable to print BW image: %s", err)
 		}
 	} else if *deviceMode == eink.DeviceModeBWR {
 		if err := eink.PrintBWR(*deviceName, imageDataBW, imageDataRW); err != nil {
-			log.Fatalf("imable to print image: %s", err)
+			log.Fatalf("unable to print BWR image: %s", err)
+		}
+	} else if *deviceMode == eink.DeviceModeBWRY {
+		if err := eink.PrintBWRY(*deviceName, imageDataBW, imageDataRW, imageDataYW); err != nil {
+			log.Fatalf("unable to print BWRY image: %s", err)
 		}
 	} else {
 		log.Fatalf("unknown device-mode: %s", *deviceMode)

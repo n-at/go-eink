@@ -94,3 +94,20 @@ func (c *PixelTransformationRed) Transform(r, g, b int) int {
 func (c *PixelTransformationRed) GetThreshold() int {
 	return c.Threshold
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+type PixelTransformationYellow struct {
+	Threshold                 int
+	YellowHueThreshold        int
+	YellowSaturationThreshold int
+	YellowLightnessThreshold  int
+}
+
+func (c *PixelTransformationYellow) Transform(r, g, b int) int {
+	return 0 //TODO
+}
+
+func (c *PixelTransformationYellow) GetThreshold() int {
+	return c.Threshold
+}
