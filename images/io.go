@@ -16,6 +16,13 @@ const (
 	SubtractBlack = "black"
 )
 
+var (
+	colorWhite  = color.RGBA{R: 255, G: 255, B: 255, A: 255}
+	colorBlack  = color.RGBA{R: 0, G: 0, B: 0, A: 255}
+	colorRed    = color.RGBA{R: 255, G: 0, B: 0, A: 255}
+	colorYellow = color.RGBA{R: 255, G: 255, B: 0, A: 255}
+)
+
 func Open(path string) (image.Image, error) {
 	reader, err := os.Open(path)
 	if err != nil {
@@ -64,17 +71,52 @@ func Subtract(original, sub image.Image) image.Image {
 	return result
 }
 
-func Join(black, red image.Image) image.Image {
+func JoinBWR(black, red image.Image) image.Image {
 	result := image.NewRGBA(black.Bounds())
 	width := result.Bounds().Dx()
 	height := result.Bounds().Dy()
-	draw.Draw(result, result.Bounds(), black, image.Point{X: 0, Y: 0}, draw.Src)
 
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
+			result.Set(x, y, colorWhite)
+
 			r, _, _, _ := red.At(x, y).RGBA()
 			if r == 0 {
-				result.Set(x, y, color.RGBA{R: 255, G: 0, B: 0, A: 255})
+				result.Set(x, y, colorRed)
+			}
+
+			r, _, _, _ = black.At(x, y).RGBA()
+			if r == 0 {
+				result.Set(x, y, colorBlack)
+			}
+		}
+	}
+
+	return result
+}
+
+func JoinBWRY(black, red, yellow image.Image) image.Image {
+	result := image.NewRGBA(black.Bounds())
+	width := result.Bounds().Dx()
+	height := result.Bounds().Dy()
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			result.Set(x, y, colorWhite)
+
+			r, _, _, _ := yellow.At(x, y).RGBA()
+			if r == 0 {
+				result.Set(x, y, colorYellow)
+			}
+
+			r, _, _, _ = red.At(x, y).RGBA()
+			if r == 0 {
+				result.Set(x, y, colorRed)
+			}
+
+			r, _, _, _ = black.At(x, y).RGBA()
+			if r == 0 {
+				result.Set(x, y, colorBlack)
 			}
 		}
 	}

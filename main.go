@@ -20,9 +20,13 @@ func main() {
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
 	imageDitheringAlgorithm := flag.String("image-dithering-algo", "floyd_steinberg", "dithering algorithm, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra")
 	imageDitheringThreshold := flag.Int("image-dithering-threshold", 128, "dithering threshold, 0..256")
+	imageRedDitheringAlgorithm := flag.String("image-red-dithering-algo", "floyd_steinberg", "dithering algorithm for red pixels, same values as -image-dithering-algo")
+	imageRedDitheringThreshold := flag.Int("image-red-dithering-threshold", 128, "red dithering threshold 0..256")
 	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 25, "hue threshold for red image (degrees)")
 	imageRedSaturationThreshold := flag.Int("image-red-saturation-threshold", 40, "saturation threshold for red image (%)")
 	imageRedLightnessThreshold := flag.Int("image-red-lightness-threshold", 80, "lightness threshold for red image (%)")
+	imageYellowDitheringAlgorithm := flag.String("image-yellow-dithering-algo", "floyd_steinberg", "dithering algorithm for yellow pixels, same values as -image-dithering-algo")
+	imageYellowDitheringThreshold := flag.Int("image-yellow-dithering-threshold", 128, "yellow dithering threshold 0..256")
 	imageYellowHueThreshold := flag.Int("image-yellow-hue-threshold", 25, "hue threshold for yellow image (degrees)")
 	imageYellowSaturationThreshold := flag.Int("image-yellow-saturation-threshold", 40, "saturation threshold for yellow image (%)")
 	imageYellowLightnessThreshold := flag.Int("image-yellow-lightness-threshold", 80, "lightness threshold for yellow image (%)")
@@ -73,30 +77,29 @@ func main() {
 	imgBW := images.Dithering(img, transformBW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
 
 	transformRW := &images.PixelTransformationRed{
-		Threshold:              *imageDitheringThreshold,
+		Threshold:              *imageRedDitheringThreshold,
 		RedHueThreshold:        *imageRedHueThreshold,
 		RedSaturationThreshold: *imageRedSaturationThreshold,
 		RedLightnessThreshold:  *imageRedLightnessThreshold,
 	}
-	imgRW := images.Dithering(img, transformRW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
+	imgRW := images.Dithering(img, transformRW, images.GetDitheringAlgorithm(*imageRedDitheringAlgorithm))
 
 	transformYW := &images.PixelTransformationYellow{
-		Threshold:                 *imageYellowHueThreshold,
+		Threshold:                 *imageYellowDitheringThreshold,
 		YellowHueThreshold:        *imageYellowHueThreshold,
 		YellowSaturationThreshold: *imageYellowSaturationThreshold,
 		YellowLightnessThreshold:  *imageYellowLightnessThreshold,
 	}
-	imgYW := images.Dithering(img, transformYW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
+	imgYW := images.Dithering(img, transformYW, images.GetDitheringAlgorithm(*imageYellowDitheringAlgorithm))
 
 	//output?
 
 	if len(*output) > 0 {
 		if *deviceMode == eink.DeviceModeBWR {
-			imgBW = images.Join(imgBW, imgRW)
+			imgBW = images.JoinBWR(imgBW, imgRW)
 		}
 		if *deviceMode == eink.DeviceModeBWRY {
-			imgBW = images.Join(imgBW, imgRW)
-			imgBW = images.Join(imgBW, imgYW)
+			imgBW = images.JoinBWRY(imgBW, imgRW, imgYW)
 		}
 		if err := images.Save(imgBW, *output); err != nil {
 			log.Fatalf("unable to save image: %s", err)
