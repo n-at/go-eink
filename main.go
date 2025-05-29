@@ -20,16 +20,12 @@ func main() {
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
 	imageDitheringAlgorithm := flag.String("image-dithering-algo", "floyd_steinberg", "dithering algorithm, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra")
 	imageDitheringThreshold := flag.Int("image-dithering-threshold", 128, "dithering threshold, 0..256")
-	imageRedDitheringAlgorithm := flag.String("image-red-dithering-algo", "atkinson", "dithering algorithm for red pixels, same values as -image-dithering-algo")
+	imageRedDitheringAlgorithm := flag.String("image-red-dithering-algo", "sierra", "dithering algorithm for red pixels, same values as -image-dithering-algo")
 	imageRedDitheringThreshold := flag.Int("image-red-dithering-threshold", 128, "red dithering threshold 0..256")
-	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 50, "hue threshold for red image (degrees)")
-	imageRedSaturationThreshold := flag.Int("image-red-saturation-threshold", 0, "saturation threshold for red image (%)")
-	imageRedLightnessThreshold := flag.Int("image-red-lightness-threshold", 80, "lightness threshold for red image (%)")
-	imageYellowDitheringAlgorithm := flag.String("image-yellow-dithering-algo", "floyd_steinberg", "dithering algorithm for yellow pixels, same values as -image-dithering-algo")
-	imageYellowDitheringThreshold := flag.Int("image-yellow-dithering-threshold", 128, "yellow dithering threshold 0..256")
-	imageYellowHueThreshold := flag.Int("image-yellow-hue-threshold", 50, "hue threshold for yellow image (degrees)")
-	imageYellowSaturationThreshold := flag.Int("image-yellow-saturation-threshold", 0, "saturation threshold for yellow image (%)")
-	imageYellowLightnessThreshold := flag.Int("image-yellow-lightness-threshold", 90, "lightness threshold for yellow image (%)")
+	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 25, "hue threshold for red image (degrees)")
+	imageYellowDitheringAlgorithm := flag.String("image-yellow-dithering-algo", "stucki", "dithering algorithm for yellow pixels, same values as -image-dithering-algo")
+	imageYellowDitheringThreshold := flag.Int("image-yellow-dithering-threshold", 180, "yellow dithering threshold 0..256")
+	imageYellowHueThreshold := flag.Int("image-yellow-hue-threshold", 25, "hue threshold for yellow image (degrees)")
 	einkWriteDataPause := flag.Int("eink-write-data-pause", 300, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
 	flag.Parse()
@@ -76,18 +72,14 @@ func main() {
 	imgBW := images.Dithering(img, transformBW, images.GetDitheringAlgorithm(*imageDitheringAlgorithm))
 
 	transformRW := &images.PixelTransformationRed{
-		Threshold:              *imageRedDitheringThreshold,
-		RedHueThreshold:        *imageRedHueThreshold,
-		RedSaturationThreshold: *imageRedSaturationThreshold,
-		RedLightnessThreshold:  *imageRedLightnessThreshold,
+		Threshold:       *imageRedDitheringThreshold,
+		RedHueThreshold: *imageRedHueThreshold,
 	}
 	imgRW := images.Dithering(img, transformRW, images.GetDitheringAlgorithm(*imageRedDitheringAlgorithm))
 
 	transformYW := &images.PixelTransformationYellow{
-		Threshold:                 *imageYellowDitheringThreshold,
-		YellowHueThreshold:        *imageYellowHueThreshold,
-		YellowSaturationThreshold: *imageYellowSaturationThreshold,
-		YellowLightnessThreshold:  *imageYellowLightnessThreshold,
+		Threshold:          *imageYellowDitheringThreshold,
+		YellowHueThreshold: *imageYellowHueThreshold,
 	}
 	imgYW := images.Dithering(img, transformYW, images.GetDitheringAlgorithm(*imageYellowDitheringAlgorithm))
 

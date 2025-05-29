@@ -33,24 +33,23 @@ type PixelTransformationRed struct {
 }
 
 func (c *PixelTransformationRed) Transform(r, g, b int) int {
-	h, s, l := RgbToHsl(r, g, b)
+	h, s, _ := RgbToHsl(r, g, b)
 	if h == 0 && s == 0 {
 		return 255 //gray
 	}
 
+	d := math.Min(h, 360.0-h)
+	half := float64(c.RedHueThreshold) / 2.0
+
 	//red: h = 0 or 360
 
-	if h > float64(c.RedHueThreshold)/2.0 && h < 360-float64(c.RedHueThreshold)/2.0 {
+	if h > half && h < 360.0-half {
 		return 255 //not in the red part of the hue circle
 	}
-	if s < float64(c.RedSaturationThreshold) {
-		return 255
-	}
-	if l > float64(c.RedLightnessThreshold) {
-		return 255
-	}
 
-	return int(255 * s / 100.0)
+	cv := 1.0 - s/100.0*(1.0-d/half)
+
+	return int(255 * cv)
 }
 
 func (c *PixelTransformationRed) GetThreshold() int {
@@ -67,25 +66,22 @@ type PixelTransformationYellow struct {
 }
 
 func (c *PixelTransformationYellow) Transform(r, g, b int) int {
-	h, s, l := RgbToHsl(r, g, b)
+	h, s, _ := RgbToHsl(r, g, b)
 	if h == 0 && s == 0 {
 		return 255 //gray
 	}
 
+	d := math.Abs(50.0 - h)
+	half := float64(c.YellowHueThreshold) / 2.0
+	cv := 1.0 - s/100.0*(1.0-d/half)
+
 	//yellow: h = 50
-	//https://hslpicker.com/#ffff00
 
-	if h > (50.0+float64(c.YellowHueThreshold)/2.0) || h < (50.0-float64(c.YellowHueThreshold)/2.0) {
-		return 255
-	}
-	if s < float64(c.YellowSaturationThreshold) {
-		return 255
-	}
-	if l > float64(c.YellowLightnessThreshold) {
+	if h > (50.0+half) || h < (50.0-half) {
 		return 255
 	}
 
-	return int(255 * s / 100.0)
+	return int(255 * cv)
 }
 
 func (c *PixelTransformationYellow) GetThreshold() int {
