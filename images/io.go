@@ -71,23 +71,34 @@ func Subtract(original, sub image.Image) image.Image {
 	return result
 }
 
-func JoinBWR(black, red image.Image) image.Image {
-	result := image.NewRGBA(black.Bounds())
+///////////////////////////////////////////////////////////////////////////////
+
+func JoinBWR(mode BlendMode, bw, rw image.Image) image.Image {
+	result := image.NewRGBA(bw.Bounds())
 	width := result.Bounds().Dx()
 	height := result.Bounds().Dy()
 
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			result.Set(x, y, colorWhite)
+			black := false
+			red := false
 
-			r, _, _, _ := red.At(x, y).RGBA()
-			if r == 0 {
-				result.Set(x, y, colorRed)
+			if v, _, _, _ := bw.At(x, y).RGBA(); v == 0 {
+				black = true
+			}
+			if v, _, _, _ := rw.At(x, y).RGBA(); v == 0 {
+				red = true
 			}
 
-			r, _, _, _ = black.At(x, y).RGBA()
-			if r == 0 {
+			c := BlendColors(mode, black, red, false)
+
+			switch c {
+			case BlendModeB:
 				result.Set(x, y, colorBlack)
+			case BlendModeR:
+				result.Set(x, y, colorRed)
+			default:
+				result.Set(x, y, colorWhite)
 			}
 		}
 	}
@@ -95,31 +106,102 @@ func JoinBWR(black, red image.Image) image.Image {
 	return result
 }
 
-func JoinBWRY(black, red, yellow image.Image) image.Image {
-	result := image.NewRGBA(black.Bounds())
+func JoinBWRY(mode BlendMode, bw, rw, yw image.Image) image.Image {
+	result := image.NewRGBA(bw.Bounds())
 	width := result.Bounds().Dx()
 	height := result.Bounds().Dy()
 
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			result.Set(x, y, colorWhite)
+			black := false
+			red := false
+			yellow := false
 
-			r, _, _, _ := yellow.At(x, y).RGBA()
-			if r == 0 {
-				result.Set(x, y, colorYellow)
+			if v, _, _, _ := bw.At(x, y).RGBA(); v == 0 {
+				black = true
+			}
+			if v, _, _, _ := rw.At(x, y).RGBA(); v == 0 {
+				red = true
+			}
+			if v, _, _, _ := yw.At(x, y).RGBA(); v == 0 {
+				yellow = true
 			}
 
-			r, _, _, _ = red.At(x, y).RGBA()
-			if r == 0 {
-				result.Set(x, y, colorRed)
-			}
+			c := BlendColors(mode, black, red, yellow)
 
-			r, _, _, _ = black.At(x, y).RGBA()
-			if r == 0 {
+			switch c {
+			case BlendModeB:
 				result.Set(x, y, colorBlack)
+			case BlendModeR:
+				result.Set(x, y, colorRed)
+			case BlendModeY:
+				result.Set(x, y, colorYellow)
+			default:
+				result.Set(x, y, colorWhite)
 			}
 		}
 	}
 
 	return result
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+const (
+	BlendModeW = 0
+	BlendModeB = 1
+	BlendModeR = 2
+	BlendModeY = 3
+)
+
+type BlendMode [3]int
+
+// 0 - White
+// 1 - Black
+// 2 - Red
+// 3 - Yellow
+func BlendColors(mode BlendMode, b, r, y bool) int {
+	for i := range 3 {
+		switch mode[i] {
+		case BlendModeB:
+			if b {
+				return BlendModeB
+			}
+		case BlendModeR:
+			if r {
+				return BlendModeR
+			}
+		case BlendModeY:
+			if y {
+				return BlendModeY
+			}
+		default:
+			return BlendModeW
+		}
+	}
+
+	return BlendModeW
+}
+
+func StringToBlendMode(mode string) BlendMode {
+	if len(mode) != 3 {
+		return BlendMode{BlendModeB, BlendModeR, BlendModeY}
+	}
+
+	v := BlendMode{BlendModeW, BlendModeW, BlendModeW}
+
+	for i := range 3 {
+		switch mode[i] {
+		case 'B':
+			v[i] = BlendModeB
+		case 'R':
+			v[i] = BlendModeR
+		case 'Y':
+			v[i] = BlendModeY
+		default:
+			v[i] = BlendModeW
+		}
+	}
+
+	return v
 }

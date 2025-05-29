@@ -13,19 +13,26 @@ func main() {
 	verbose := flag.Bool("verbose", false, "show extended output")
 	list := flag.Bool("list", false, "show available devices and exit")
 	output := flag.String("output", "", "output result to file and exit")
+
 	deviceName := flag.String("device", "", "device name, required, can be obtained with -list flag")
-	deviceMode := flag.String("device-mode", "bw", "device mode, one of: bw (black and white for IL075U, IL075RU, GDP075FU1), bwr (black, white and red for IL075RU, GDP075FU1), bwry (black, white, red and yellow for GDP075FU1)")
+	deviceMode := flag.String("device-mode", "bw", "device mode, one of: bw (black and white for IL075U, IL075RU), bwr (black, white and red for IL075RU), bwry (black, white, red and yellow for GDP075FU1)")
+
 	imagePath := flag.String("image", "", "path to image to print, required")
 	imageEnlarge := flag.Bool("image-enlarge", false, "enlarge image to fit screen")
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
-	imageDitheringAlgorithm := flag.String("image-dithering-algo", "floyd_steinberg", "dithering algorithm, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra")
+	imageBlendMode := flag.String("image-bend-mode", "BYR", "combination of letters {B, R, Y} defines order of blending result image from black, red, and yellow components, from top layer to bottom")
+
+	imageDitheringAlgorithm := flag.String("image-dithering-algo", "floyd_steinberg", "dithering algorithm for black and white, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra")
 	imageDitheringThreshold := flag.Int("image-dithering-threshold", 128, "dithering threshold, 0..256")
-	imageRedDitheringAlgorithm := flag.String("image-red-dithering-algo", "sierra", "dithering algorithm for red pixels, same values as -image-dithering-algo")
+
+	imageRedDitheringAlgorithm := flag.String("image-red-dithering-algo", "sierra", "dithering algorithm for red color, same values as -image-dithering-algo")
 	imageRedDitheringThreshold := flag.Int("image-red-dithering-threshold", 128, "red dithering threshold 0..256")
-	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 25, "hue threshold for red image (degrees)")
-	imageYellowDitheringAlgorithm := flag.String("image-yellow-dithering-algo", "stucki", "dithering algorithm for yellow pixels, same values as -image-dithering-algo")
+	imageRedHueThreshold := flag.Int("image-red-hue-threshold", 25, "hue threshold for red image (degrees) 0..360")
+
+	imageYellowDitheringAlgorithm := flag.String("image-yellow-dithering-algo", "stucki", "dithering algorithm for yellow color, same values as -image-dithering-algo")
 	imageYellowDitheringThreshold := flag.Int("image-yellow-dithering-threshold", 180, "yellow dithering threshold 0..256")
-	imageYellowHueThreshold := flag.Int("image-yellow-hue-threshold", 25, "hue threshold for yellow image (degrees)")
+	imageYellowHueThreshold := flag.Int("image-yellow-hue-threshold", 25, "hue threshold for yellow image (degrees) 0..360")
+
 	einkWriteDataPause := flag.Int("eink-write-data-pause", 300, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
 	flag.Parse()
@@ -83,14 +90,16 @@ func main() {
 	}
 	imgYW := images.Dithering(img, transformYW, images.GetDitheringAlgorithm(*imageYellowDitheringAlgorithm))
 
+	blendMode := images.StringToBlendMode(*imageBlendMode)
+
 	//output?
 
 	if len(*output) > 0 {
 		if *deviceMode == eink.DeviceModeBWR {
-			imgBW = images.JoinBWR(imgBW, imgRW)
+			imgBW = images.JoinBWR(blendMode, imgBW, imgRW)
 		}
 		if *deviceMode == eink.DeviceModeBWRY {
-			imgBW = images.JoinBWRY(imgBW, imgRW, imgYW)
+			imgBW = images.JoinBWRY(blendMode, imgBW, imgRW, imgYW)
 		}
 		if err := images.Save(imgBW, *output); err != nil {
 			log.Fatalf("unable to save image: %s", err)
