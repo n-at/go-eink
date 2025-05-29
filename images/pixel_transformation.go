@@ -72,9 +72,10 @@ func (c *PixelTransformationYellow) Transform(r, g, b int) int {
 		return 255 //gray
 	}
 
-	//yellow: h = 65
+	//yellow: h = 50
+	//https://hslpicker.com/#ffff00
 
-	if h > (65.0+float64(c.YellowHueThreshold)/2.0) || h < (65.0-float64(c.YellowHueThreshold)/2.0) {
+	if h > (50.0+float64(c.YellowHueThreshold)/2.0) || h < (50.0-float64(c.YellowHueThreshold)/2.0) {
 		return 255
 	}
 	if s < float64(c.YellowSaturationThreshold) {
