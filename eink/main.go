@@ -55,7 +55,7 @@ func PrintBW(portName string, imageData []byte) error {
 
 	log.Debug("handshake")
 	if err := handshake(port, DisplayModel, 0); err != nil {
-		return errors.New(fmt.Sprintf("unable to handshake: %s", err))
+		return fmt.Errorf("unable to handshake: %s", err)
 	} else {
 		log.Info("handshake ok")
 	}
@@ -88,7 +88,7 @@ func PrintBWR(portName string, imageDataBW, imageDataRW []byte) error {
 
 	log.Debug("handshake")
 	if err := handshake(port, DisplayModel, 1); err != nil {
-		return errors.New(fmt.Sprintf("unable to handshake: %s", err))
+		return fmt.Errorf("unable to handshake: %s", err)
 	} else {
 		log.Info("handshake ok")
 	}
@@ -107,25 +107,25 @@ func PrintBWRY(portName string, imageDataBW, imageDataRW, imageDataYW []byte) er
 func preparePort(portName string) (serial.Port, error) {
 	log.Debug("test port")
 	if err := testPort(portName); err != nil {
-		return nil, errors.New(fmt.Sprintf("unable to test port: %s", err))
+		return nil, fmt.Errorf("unable to test port: %s", err)
 	}
 
 	log.Debug("open port")
 	port, err := serial.Open(portName, portMode())
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("unable to open port %s: %s", portName, err))
+		return nil, fmt.Errorf("unable to open port %s: %s", portName, err)
 	}
 
 	//setup port
 
 	log.Debug("set port RTS")
 	if err := port.SetRTS(true); err != nil {
-		return nil, errors.New(fmt.Sprintf("unable to set RTS: %s", err))
+		return nil, fmt.Errorf("unable to set RTS: %s", err)
 	}
 
 	log.Debug("set port read timeout")
 	if err := port.SetReadTimeout(serial.NoTimeout); err != nil {
-		return nil, errors.New(fmt.Sprintf("unable to reset read timeout: %s", err))
+		return nil, fmt.Errorf("unable to reset read timeout: %s", err)
 	}
 
 	return port, nil
@@ -134,7 +134,7 @@ func preparePort(portName string) (serial.Port, error) {
 func handshake(port serial.Port, displayModel, displayRed byte) error {
 	log.Debug("send handshake request")
 	if _, err := port.Write(handshakeRequest(displayModel, displayRed)); err != nil {
-		return errors.New(fmt.Sprintf("unable to send handshake request: %s", err))
+		return fmt.Errorf("unable to send handshake request: %s", err)
 	}
 
 	time.Sleep(time.Duration(WriteDataPause) * time.Millisecond)
@@ -143,13 +143,13 @@ func handshake(port serial.Port, displayModel, displayRed byte) error {
 	buf := make([]byte, 1024)
 	count, err := port.Read(buf)
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to read handshake response: %s", err))
+		return fmt.Errorf("unable to read handshake response: %s", err)
 	}
 
 	log.Debugf("handshake response: %s", printable(buf[:count]))
 
 	if err := validateHandshakeResponse(buf[:count]); err != nil {
-		return errors.New(fmt.Sprintf("unable to validate handshake response: %s", err))
+		return fmt.Errorf("unable to validate handshake response: %s", err)
 	}
 
 	return nil
@@ -179,22 +179,22 @@ func printImage(port serial.Port, imageData []byte) (bool, error) {
 
 		log.Debugf("write chunk #%d (%d bytes)", chunkIdx, len(chunk))
 		if err := writePortData(port, chunk); err != nil {
-			return false, errors.New(fmt.Sprintf("unable to write chunk: %s", err))
+			return false, fmt.Errorf("unable to write chunk: %s", err)
 		}
 
 		log.Debugf("write CRLF after chunk #%d", chunkIdx)
 		if err := writePortData(port, []byte{CR, LF}); err != nil {
-			return false, errors.New(fmt.Sprintf("unable to write CRLF after chunk #%d: %s", chunkIdx, err))
+			return false, fmt.Errorf("unable to write CRLF after chunk #%d: %s", chunkIdx, err)
 		}
 
 		log.Debugf("read data after chunk #%d (1-st line)", chunkIdx)
 		if _, err := readPortData(port); err != nil {
-			return false, errors.New(fmt.Sprintf("unable to read data: %s", err))
+			return false, fmt.Errorf("unable to read data: %s", err)
 		}
 
 		log.Debugf("read data after chunk #%d (2-nd line)", chunkIdx)
 		if _, err := readPortData(port); err != nil {
-			return false, errors.New(fmt.Sprintf("unable to read data: %s", err))
+			return false, fmt.Errorf("unable to read data: %s", err)
 		}
 
 		time.Sleep(time.Duration(WriteDataPause) * time.Millisecond)
@@ -208,7 +208,7 @@ func printImage(port serial.Port, imageData []byte) (bool, error) {
 	log.Debugf("read remaining data")
 	remaining, err := readPortData(port)
 	if err != nil {
-		return false, errors.New(fmt.Sprintf("unable to read data: %s", err))
+		return false, fmt.Errorf("unable to read data: %s", err)
 	}
 
 	bytesReceived, err := extractReceivedBytes(remaining)

@@ -3,10 +3,11 @@ package eink
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"go.bug.st/serial"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"go.bug.st/serial"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -159,7 +160,7 @@ func extractReceivedBytes(data []byte) (int, error) {
 
 	bytesReceived, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("unable to read bytes data count: %s", err))
+		return 0, fmt.Errorf("unable to read bytes data count: %s", err)
 	}
 
 	return bytesReceived, nil

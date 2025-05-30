@@ -33,7 +33,7 @@ func main() {
 	imageYellowDitheringThreshold := flag.Int("image-yellow-dithering-threshold", 180, "yellow dithering threshold 0..256")
 	imageYellowHueThreshold := flag.Int("image-yellow-hue-threshold", 25, "hue threshold for yellow image (degrees) 0..360")
 
-	einkWriteDataPause := flag.Int("eink-write-data-pause", 300, "pause between image chunk writing (ms)")
+	einkWriteDataPause := flag.Int("eink-write-data-pause", 1000, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
 	flag.Parse()
 

@@ -6,9 +6,9 @@ Output an arbitrary image on
 [GoodDisplay GDP075FU1](https://www.good-display.com/product/640.html) (black, white, red and yellow)
 e-ink displays.
 
-IL075RU can work in black-white-red and black-white modes.
-
-GDP075FU1 works only in black-white-red-yellow mode.
+* IL075U works only in black-white mode.
+* IL075RU can work in black-white-red and black-white modes.
+* GDP075FU1 works only in black-white-red-yellow mode.
 
 Tested on Raspberry Pi 4 (arm64), macOS Ventura (amd64, arm64).
 
@@ -25,7 +25,44 @@ go build -a -o app
 Run with `-help` flag to get all options:
 
 ```txt
-TODO
+  -device string
+    	device name, required, can be obtained with -list flag
+  -device-mode string
+    	device mode, one of: bw (black and white for IL075U, IL075RU), bwr (black, white and red for IL075RU), bwry (black, white, red and yellow for GDP075FU1) (default "bw")
+  -eink-screen-refresh-pause int
+    	pause for screen refresh (ms) (default 5000)
+  -eink-write-data-pause int
+    	pause between image chunk writing (ms) (default 300)
+  -image string
+    	path to image to print, required
+  -image-align string
+    	image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right (default "middle")
+  -image-bend-mode string
+    	combination of letters {B, R, Y} defines order of blending result image from black, red, and yellow components, from top layer to bottom (default "BYR")
+  -image-dithering-algo string
+    	dithering algorithm for black and white, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra (default "floyd_steinberg")
+  -image-dithering-threshold int
+    	dithering threshold, 0..256 (default 128)
+  -image-enlarge
+    	enlarge image to fit screen
+  -image-red-dithering-algo string
+    	dithering algorithm for red color, same values as -image-dithering-algo (default "sierra")
+  -image-red-dithering-threshold int
+    	red dithering threshold 0..256 (default 128)
+  -image-red-hue-threshold int
+    	hue threshold for red image (degrees) 0..360 (default 25)
+  -image-yellow-dithering-algo string
+    	dithering algorithm for yellow color, same values as -image-dithering-algo (default "stucki")
+  -image-yellow-dithering-threshold int
+    	yellow dithering threshold 0..256 (default 180)
+  -image-yellow-hue-threshold int
+    	hue threshold for yellow image (degrees) 0..360 (default 25)
+  -list
+    	show available devices and exit
+  -output string
+    	output result to file and exit
+  -verbose
+    	show extended output
 ```
 
 ## Linux USB permissions
