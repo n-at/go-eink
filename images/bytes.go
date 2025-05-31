@@ -20,15 +20,15 @@ func ToImageDataBW(img image.Image) []byte {
 
 	outputLength := (width * height) / 8
 	output := make([]byte, outputLength)
-	for i := 0; i < outputLength; i++ {
+	for i := range outputLength {
 		output[i] = 0
 	}
 
 	current := 0
 	bitNum := 0
 
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := range height {
+		for x := range width {
 			r, _, _, _ := img.At(x, y).RGBA()
 			if r/257 > 127 {
 				output[current] |= 1
@@ -51,7 +51,7 @@ func ToImageDataBW(img image.Image) []byte {
 func prepareImageDataBW(imageData []byte) []byte {
 	prepared := make([]byte, len(imageData))
 
-	for idx := 0; idx < len(imageData); idx++ {
+	for idx := range imageData {
 		if imageData[idx] == 13 {
 			prepared[idx] = 12
 		} else {
@@ -111,7 +111,7 @@ func prepareImageDataBWR(imageDataBW, imageDataRW []byte) []byte {
 	prepared := make([]byte, len(imageDataBW)+len(imageDataRW))
 	offset := 0
 
-	for idx := 0; idx < len(imageDataBW); idx++ {
+	for idx := range imageDataBW {
 		if imageDataBW[idx] == 13 {
 			prepared[idx+offset] = 12
 		} else {
@@ -121,7 +121,7 @@ func prepareImageDataBWR(imageDataBW, imageDataRW []byte) []byte {
 
 	offset += len(imageDataBW)
 
-	for idx := 0; idx < len(imageDataRW); idx++ {
+	for idx := range imageDataRW {
 		if imageDataRW[idx] == 13 {
 			prepared[idx+offset] = 12
 		} else {
@@ -180,6 +180,12 @@ func ToImageDataBWRY(blendMode BlendMode, imgBW, imgRW, imgYW image.Image) []byt
 
 			output[outputIdx] = val
 			outputIdx++
+		}
+	}
+
+	for i := range output {
+		if output[i] == 13 {
+			output[i] = 12
 		}
 	}
 
