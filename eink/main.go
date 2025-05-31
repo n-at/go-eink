@@ -21,7 +21,10 @@ const (
 	ImageWidth  = 800
 	ImageHeight = 480
 
-	DisplayModel = 0xc4 //IL075U(R) - black and white (or black, white, red), 7.5 inch
+	DisplayModel        = 0xc4 //IL075U(R), GDP075FU1 - BW, BWR, BWRY, 7.5 inch
+	DisplayModeByteBWR  = 0x01
+	DisplayModeByteBWRY = 0x04
+	DisplayModeByteNone = 0x00
 
 	DeviceModeBW   = "bw"
 	DeviceModeBWR  = "bwr"
@@ -37,38 +40,16 @@ var (
 ///////////////////////////////////////////////////////////////////////////////
 
 func PrintBW(portName string, imageData []byte) error {
-	//prepare data
-
 	if !imageDataValid(imageData) {
 		return errors.New("image data length mismatch")
 	}
 
 	imageData = prepareImageDataBW(imageData)
 
-	//open port
-
-	port, err := preparePort(portName)
-	if err != nil {
-		return err
-	}
-
-	//handshake
-
-	log.Debug("handshake")
-	if err := handshake(port, DisplayModel, 0); err != nil {
-		return fmt.Errorf("unable to handshake: %s", err)
-	} else {
-		log.Info("handshake ok")
-	}
-
-	//print image
-
-	return printImageCycle(port, imageData)
+	return printImage(portName, DeviceModeBW, imageData)
 }
 
 func PrintBWR(portName string, imageDataBW, imageDataRW []byte) error {
-	//prepare data
-
 	if !imageDataValid(imageDataBW) {
 		return errors.New("BW image data length mismatch")
 	}
@@ -78,29 +59,14 @@ func PrintBWR(portName string, imageDataBW, imageDataRW []byte) error {
 
 	imageData := prepareImageDataBWR(imageDataBW, imageDataRW)
 
-	//open port
-
-	port, err := preparePort(portName)
-	if err != nil {
-		return err
-	}
-
-	//handshake
-
-	log.Debug("handshake")
-	if err := handshake(port, DisplayModel, 1); err != nil {
-		return fmt.Errorf("unable to handshake: %s", err)
-	} else {
-		log.Info("handshake ok")
-	}
-
-	//print image
-
-	return printImageCycle(port, imageData)
+	return printImage(portName, DeviceModeBWR, imageData)
 }
 
-func PrintBWRY(portName string, imageDataBW, imageDataRW, imageDataYW []byte) error {
-	return errors.New("not implemented") //TODO
+func PrintBWRY(portName string, imageData []byte) error {
+	if !imageDataBWRYValid(imageData) {
+		return errors.New("BWRY image data length mismatch")
+	}
+	return printImage(portName, DeviceModeBWRY, imageData)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -132,9 +98,9 @@ func preparePort(portName string) (serial.Port, error) {
 	return port, nil
 }
 
-func handshake(port serial.Port, displayModel, displayRed byte) error {
+func handshake(port serial.Port, displayModel byte, deviceMode string) error {
 	log.Debug("send handshake request")
-	if _, err := port.Write(handshakeRequest(displayModel, displayRed)); err != nil {
+	if _, err := port.Write(handshakeRequest(displayModel, deviceMode)); err != nil {
 		return fmt.Errorf("unable to send handshake request: %s", err)
 	}
 
@@ -155,22 +121,29 @@ func handshake(port serial.Port, displayModel, displayRed byte) error {
 	return nil
 }
 
-func printImageCycle(port serial.Port, imageData []byte) error {
-	for {
-		ok, err := printImage(port, imageData)
-		if err != nil {
-			return err
-		}
-		if ok {
-			log.Info("done")
-			return nil
-		} else {
-			log.Info("print failed, retrying")
-		}
+func printImage(portName string, deviceMode string, imageData []byte) error {
+	//open port
+
+	port, err := preparePort(portName)
+	if err != nil {
+		return err
 	}
+
+	//handshake
+
+	log.Debug("handshake")
+	if err := handshake(port, DisplayModel, deviceMode); err != nil {
+		return fmt.Errorf("unable to handshake: %s", err)
+	} else {
+		log.Info("handshake ok")
+	}
+
+	//print
+
+	return printImageImpl(port, imageData)
 }
 
-func printImage(port serial.Port, imageData []byte) (bool, error) {
+func printImageImpl(port serial.Port, imageData []byte) error {
 	chunkIdx := 0
 
 	for chunkStart := 0; chunkStart < len(imageData); chunkStart += 4096 {
@@ -179,23 +152,23 @@ func printImage(port serial.Port, imageData []byte) (bool, error) {
 
 		log.Debugf("write chunk #%d (%d bytes)", chunkIdx, len(chunk))
 		if err := writePortData(port, chunk); err != nil {
-			return false, fmt.Errorf("unable to write chunk: %s", err)
+			return fmt.Errorf("unable to write chunk: %s", err)
 		}
 
 		log.Debugf("write CRLF after chunk #%d", chunkIdx)
 		if err := writePortData(port, []byte{CR, LF}); err != nil {
-			return false, fmt.Errorf("unable to write CRLF after chunk #%d: %s", chunkIdx, err)
+			return fmt.Errorf("unable to write CRLF after chunk #%d: %s", chunkIdx, err)
 		}
 
 		if ReadDeviceOutput {
 			log.Debugf("read data after chunk #%d (1-st line)", chunkIdx)
 			if _, err := readPortData(port); err != nil {
-				return false, fmt.Errorf("unable to read data: %s", err)
+				return fmt.Errorf("unable to read data: %s", err)
 			}
 
 			log.Debugf("read data after chunk #%d (2-nd line)", chunkIdx)
 			if _, err := readPortData(port); err != nil {
-				return false, fmt.Errorf("unable to read data: %s", err)
+				return fmt.Errorf("unable to read data: %s", err)
 			}
 		}
 
@@ -206,7 +179,7 @@ func printImage(port serial.Port, imageData []byte) (bool, error) {
 
 	log.Debug("draining output buffer...")
 	if err := port.Drain(); err != nil {
-		return false, fmt.Errorf("unable to drain output buffer: %s", err)
+		return fmt.Errorf("unable to drain output buffer: %s", err)
 	}
 
 	log.Info("waiting for screen to refresh")
@@ -216,29 +189,29 @@ func printImage(port serial.Port, imageData []byte) (bool, error) {
 		log.Debugf("read remaining data")
 		remaining, err := readPortData(port)
 		if err != nil {
-			return false, fmt.Errorf("unable to read data: %s", err)
+			return fmt.Errorf("unable to read data: %s", err)
 		}
 
 		bytesReceived, err := extractReceivedBytes(remaining)
 		if err != nil {
-			return false, err
+			return err
 		}
 
 		log.Debugf("bytes received: %d", bytesReceived)
 		if bytesReceived != len(imageData) {
-			return false, nil
+			return errors.New("received incorrect number of bytes from display")
 		}
 	}
 
 	log.Debugf("reset input buffer...")
 	if err := port.ResetInputBuffer(); err != nil {
-		return false, fmt.Errorf("unable to reset input buffer: %s", err)
+		return fmt.Errorf("unable to reset input buffer: %s", err)
 	}
 
 	log.Debugf("reset output buffer...")
 	if err := port.ResetOutputBuffer(); err != nil {
-		return false, fmt.Errorf("unable to reset output buffer: %s", err)
+		return fmt.Errorf("unable to reset output buffer: %s", err)
 	}
 
-	return true, nil
+	return nil
 }

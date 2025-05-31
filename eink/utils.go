@@ -12,16 +12,26 @@ import (
 
 ///////////////////////////////////////////////////////////////////////////////
 
-func handshakeRequest(displayModel, displayRed byte) []byte {
+func handshakeRequest(displayModel byte, deviceMode string) []byte {
+	var displayBWR byte = DisplayModeByteNone
+	var displayBWRY byte = DisplayModeByteNone
+
+	switch deviceMode {
+	case DeviceModeBWR:
+		displayBWR = DisplayModeByteBWR
+	case DeviceModeBWRY:
+		displayBWRY = DisplayModeByteBWRY
+	}
+
 	request := make([]byte, 12)
 	request[0] = 0xaa
 	request[1] = 0x55
 	request[2] = 0xe1
 	request[3] = ((ImageWidth * ImageHeight) / 8) / 256
 	request[4] = ((ImageWidth * ImageHeight) / 8) % 256
-	request[5] = 0
+	request[5] = displayBWRY
 	request[6] = displayModel
-	request[7] = displayRed
+	request[7] = displayBWR
 
 	sum := 0
 	for i := 0; i < 8; i++ {
@@ -111,6 +121,10 @@ func writePortData(port serial.Port, data []byte) error {
 
 func imageDataValid(imageData []byte) bool {
 	return len(imageData) == (ImageHeight*ImageWidth)/8
+}
+
+func imageDataBWRYValid(imageData []byte) bool {
+	return len(imageData) == (ImageHeight*ImageWidth)/4
 }
 
 func prepareImageDataBW(imageData []byte) []byte {

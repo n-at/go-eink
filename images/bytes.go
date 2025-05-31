@@ -35,3 +35,7 @@ func ToImageData(img image.Image) []byte {
 
 	return output
 }
+
+func ToImageDataBWRY(blendMode BlendMode, imgBW, imgRW, imgYW image.Image) []byte {
+	return nil //TODO
+}

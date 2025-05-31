@@ -111,24 +111,24 @@ func main() {
 
 	//print
 
-	imageDataBW := images.ToImageData(imgBW)
-	imageDataRW := images.ToImageData(imgRW)
-	imageDataYW := images.ToImageData(imgYW)
-
 	if len(*deviceName) == 0 {
 		log.Fatal("device required")
 	}
 
 	if *deviceMode == eink.DeviceModeBW {
+		imageDataBW := images.ToImageData(imgBW)
 		if err := eink.PrintBW(*deviceName, imageDataBW); err != nil {
 			log.Fatalf("unable to print BW image: %s", err)
 		}
 	} else if *deviceMode == eink.DeviceModeBWR {
+		imageDataBW := images.ToImageData(imgBW)
+		imageDataRW := images.ToImageData(imgRW)
 		if err := eink.PrintBWR(*deviceName, imageDataBW, imageDataRW); err != nil {
 			log.Fatalf("unable to print BWR image: %s", err)
 		}
 	} else if *deviceMode == eink.DeviceModeBWRY {
-		if err := eink.PrintBWRY(*deviceName, imageDataBW, imageDataRW, imageDataYW); err != nil {
+		imageData := images.ToImageDataBWRY(blendMode, imgBW, imgRW, imgYW)
+		if err := eink.PrintBWRY(*deviceName, imageData); err != nil {
 			log.Fatalf("unable to print BWRY image: %s", err)
 		}
 	} else {
