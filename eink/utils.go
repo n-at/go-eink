@@ -123,47 +123,12 @@ func imageDataValid(imageData []byte) bool {
 	return len(imageData) == (ImageHeight*ImageWidth)/8
 }
 
-func imageDataBWRYValid(imageData []byte) bool {
+func imageDataBWRValid(imageData []byte) bool {
 	return len(imageData) == (ImageHeight*ImageWidth)/4
 }
 
-func prepareImageDataBW(imageData []byte) []byte {
-	prepared := make([]byte, len(imageData))
-
-	for idx := 0; idx < len(imageData); idx++ {
-		if imageData[idx] == 13 {
-			prepared[idx] = 12
-		} else {
-			prepared[idx] = imageData[idx]
-		}
-	}
-
-	return prepared
-}
-
-func prepareImageDataBWR(imageDataBW, imageDataRW []byte) []byte {
-	prepared := make([]byte, len(imageDataBW)+len(imageDataRW))
-	offset := 0
-
-	for idx := 0; idx < len(imageDataBW); idx++ {
-		if imageDataBW[idx] == 13 {
-			prepared[idx+offset] = 12
-		} else {
-			prepared[idx+offset] = imageDataBW[idx]
-		}
-	}
-
-	offset += len(imageDataBW)
-
-	for idx := 0; idx < len(imageDataRW); idx++ {
-		if imageDataRW[idx] == 13 {
-			prepared[idx+offset] = 12
-		} else {
-			prepared[idx+offset] = imageDataRW[idx]
-		}
-	}
-
-	return prepared
+func imageDataBWRYValid(imageData []byte) bool {
+	return len(imageData) == (ImageHeight*ImageWidth)/4
 }
 
 func extractReceivedBytes(data []byte) (int, error) {

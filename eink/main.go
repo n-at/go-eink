@@ -43,22 +43,13 @@ func PrintBW(portName string, imageData []byte) error {
 	if !imageDataValid(imageData) {
 		return errors.New("image data length mismatch")
 	}
-
-	imageData = prepareImageDataBW(imageData)
-
 	return printImage(portName, DeviceModeBW, imageData)
 }
 
-func PrintBWR(portName string, imageDataBW, imageDataRW []byte) error {
-	if !imageDataValid(imageDataBW) {
-		return errors.New("BW image data length mismatch")
+func PrintBWR(portName string, imageData []byte) error {
+	if !imageDataBWRValid(imageData) {
+		return errors.New("BWR image data length mismatch")
 	}
-	if !imageDataValid(imageDataRW) {
-		return errors.New("RW image data length mismatch")
-	}
-
-	imageData := prepareImageDataBWR(imageDataBW, imageDataRW)
-
 	return printImage(portName, DeviceModeBWR, imageData)
 }
 
