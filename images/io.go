@@ -156,10 +156,6 @@ const (
 
 type BlendMode [3]int
 
-// 0 - White
-// 1 - Black
-// 2 - Red
-// 3 - Yellow
 func BlendColors(mode BlendMode, b, r, y bool) int {
 	for i := range 3 {
 		switch mode[i] {
@@ -192,11 +188,11 @@ func StringToBlendMode(mode string) BlendMode {
 
 	for i := range 3 {
 		switch mode[i] {
-		case 'B':
+		case 'B', 'b':
 			v[i] = BlendModeB
-		case 'R':
+		case 'R', 'r':
 			v[i] = BlendModeR
-		case 'Y':
+		case 'Y', 'y':
 			v[i] = BlendModeY
 		default:
 			v[i] = BlendModeW

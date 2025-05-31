@@ -10,7 +10,7 @@ e-ink displays.
 * IL075RU can work in black-white-red and black-white modes.
 * GDP075FU1 works only in black-white-red-yellow mode.
 
-Tested on Raspberry Pi 4 (arm64), macOS Ventura (amd64, arm64).
+Tested on Raspberry Pi 4 (arm64), macOS Ventura (amd64, arm64), Ubuntu 24.04 (amd64).
 
 ## Build
 
@@ -29,15 +29,17 @@ Run with `-help` flag to get all options:
     	device name, required, can be obtained with -list flag
   -device-mode string
     	device mode, one of: bw (black and white for IL075U, IL075RU), bwr (black, white and red for IL075RU), bwry (black, white, red and yellow for GDP075FU1) (default "bw")
+  -eink-read-device-output
+    	read data sent by device (NOTICE: in some cases output may be inconsistent)
   -eink-screen-refresh-pause int
     	pause for screen refresh (ms) (default 5000)
   -eink-write-data-pause int
-    	pause between image chunk writing (ms) (default 300)
+    	pause between image chunk writing (ms) (default 1000)
   -image string
     	path to image to print, required
   -image-align string
     	image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right (default "middle")
-  -image-bend-mode string
+  -image-blend-mode string
     	combination of letters {B, R, Y} defines order of blending result image from black, red, and yellow components, from top layer to bottom (default "BYR")
   -image-dithering-algo string
     	dithering algorithm for black and white, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra (default "floyd_steinberg")

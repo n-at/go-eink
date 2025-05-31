@@ -20,7 +20,7 @@ func main() {
 	imagePath := flag.String("image", "", "path to image to print, required")
 	imageEnlarge := flag.Bool("image-enlarge", false, "enlarge image to fit screen")
 	imageAlign := flag.String("image-align", "middle", "image alignment, one of: top-left, top-middle, top-right, middle-left, middle, middle-right, bottom-left, bottom-middle, bottom-right")
-	imageBlendMode := flag.String("image-bend-mode", "BYR", "combination of letters {B, R, Y} defines order of blending result image from black, red, and yellow components, from top layer to bottom")
+	imageBlendMode := flag.String("image-blend-mode", "BYR", "combination of letters {B, R, Y} defines order of blending result image from black, red, and yellow components, from top layer to bottom")
 
 	imageDitheringAlgorithm := flag.String("image-dithering-algo", "floyd_steinberg", "dithering algorithm for black and white, one of: floyd_steinberg, jarvis_judice_ninke, atkinson, burkes, stucki, sierra")
 	imageDitheringThreshold := flag.Int("image-dithering-threshold", 128, "dithering threshold, 0..256")
