@@ -35,6 +35,7 @@ func main() {
 
 	einkWriteDataPause := flag.Int("eink-write-data-pause", 1000, "pause between image chunk writing (ms)")
 	einkScreenRefreshPause := flag.Int("eink-screen-refresh-pause", 5000, "pause for screen refresh (ms)")
+	einkReadDeviceOutput := flag.Bool("eink-read-device-output", false, "read data sent by device (NOTICE: in some cases output may be inconsistent)")
 	flag.Parse()
 
 	//prepare logger
@@ -53,6 +54,7 @@ func main() {
 
 	eink.WriteDataPause = *einkWriteDataPause
 	eink.ScreenRefreshPause = *einkScreenRefreshPause
+	eink.ReadDeviceOutput = *einkReadDeviceOutput
 
 	//list devices
 

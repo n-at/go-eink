@@ -31,6 +31,7 @@ const (
 var (
 	WriteDataPause     = 1000
 	ScreenRefreshPause = 5000
+	ReadDeviceOutput   = false
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,9 +124,9 @@ func preparePort(portName string) (serial.Port, error) {
 		return nil, fmt.Errorf("unable to set RTS: %s", err)
 	}
 
-	log.Debug("set port read timeout")
+	log.Debug("set port read timeout to unlimited")
 	if err := port.SetReadTimeout(serial.NoTimeout); err != nil {
-		return nil, fmt.Errorf("unable to reset read timeout: %s", err)
+		return nil, fmt.Errorf("unable to set read timeout: %s", err)
 	}
 
 	return port, nil
@@ -140,15 +141,14 @@ func handshake(port serial.Port, displayModel, displayRed byte) error {
 	time.Sleep(time.Duration(WriteDataPause) * time.Millisecond)
 
 	log.Debug("read handshake response")
-	buf := make([]byte, 1024)
-	count, err := port.Read(buf)
+	buf, err := readPortData(port)
 	if err != nil {
 		return fmt.Errorf("unable to read handshake response: %s", err)
 	}
 
-	log.Debugf("handshake response: %s", printable(buf[:count]))
+	log.Debugf("handshake response: %s", printable(buf))
 
-	if err := validateHandshakeResponse(buf[:count]); err != nil {
+	if err := validateHandshakeResponse(buf); err != nil {
 		return fmt.Errorf("unable to validate handshake response: %s", err)
 	}
 
@@ -187,14 +187,16 @@ func printImage(port serial.Port, imageData []byte) (bool, error) {
 			return false, fmt.Errorf("unable to write CRLF after chunk #%d: %s", chunkIdx, err)
 		}
 
-		log.Debugf("read data after chunk #%d (1-st line)", chunkIdx)
-		if _, err := readPortData(port); err != nil {
-			return false, fmt.Errorf("unable to read data: %s", err)
-		}
+		if ReadDeviceOutput {
+			log.Debugf("read data after chunk #%d (1-st line)", chunkIdx)
+			if _, err := readPortData(port); err != nil {
+				return false, fmt.Errorf("unable to read data: %s", err)
+			}
 
-		log.Debugf("read data after chunk #%d (2-nd line)", chunkIdx)
-		if _, err := readPortData(port); err != nil {
-			return false, fmt.Errorf("unable to read data: %s", err)
+			log.Debugf("read data after chunk #%d (2-nd line)", chunkIdx)
+			if _, err := readPortData(port); err != nil {
+				return false, fmt.Errorf("unable to read data: %s", err)
+			}
 		}
 
 		time.Sleep(time.Duration(WriteDataPause) * time.Millisecond)
@@ -202,23 +204,40 @@ func printImage(port serial.Port, imageData []byte) (bool, error) {
 		chunkIdx++
 	}
 
-	log.Info("wait for screen to refresh")
+	log.Debug("draining output buffer...")
+	if err := port.Drain(); err != nil {
+		return false, fmt.Errorf("unable to drain output buffer: %s", err)
+	}
+
+	log.Info("waiting for screen to refresh")
 	time.Sleep(time.Duration(ScreenRefreshPause) * time.Millisecond)
 
-	log.Debugf("read remaining data")
-	remaining, err := readPortData(port)
-	if err != nil {
-		return false, fmt.Errorf("unable to read data: %s", err)
+	if ReadDeviceOutput {
+		log.Debugf("read remaining data")
+		remaining, err := readPortData(port)
+		if err != nil {
+			return false, fmt.Errorf("unable to read data: %s", err)
+		}
+
+		bytesReceived, err := extractReceivedBytes(remaining)
+		if err != nil {
+			return false, err
+		}
+
+		log.Debugf("bytes received: %d", bytesReceived)
+		if bytesReceived != len(imageData) {
+			return false, nil
+		}
 	}
 
-	bytesReceived, err := extractReceivedBytes(remaining)
-	if err != nil {
-		return false, err
+	log.Debugf("reset input buffer...")
+	if err := port.ResetInputBuffer(); err != nil {
+		return false, fmt.Errorf("unable to reset input buffer: %s", err)
 	}
 
-	log.Debugf("bytes received: %d", bytesReceived)
-	if bytesReceived != len(imageData) {
-		return false, nil
+	log.Debugf("reset output buffer...")
+	if err := port.ResetOutputBuffer(); err != nil {
+		return false, fmt.Errorf("unable to reset output buffer: %s", err)
 	}
 
 	return true, nil

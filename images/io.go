@@ -17,10 +17,10 @@ const (
 )
 
 var (
-	colorWhite  = color.RGBA{R: 200, G: 200, B: 200, A: 255}
+	colorWhite  = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 	colorBlack  = color.RGBA{R: 0, G: 0, B: 0, A: 255}
-	colorRed    = color.RGBA{R: 200, G: 50, B: 50, A: 255}
-	colorYellow = color.RGBA{R: 200, G: 200, B: 20, A: 255}
+	colorRed    = color.RGBA{R: 255, G: 0, B: 0, A: 255}
+	colorYellow = color.RGBA{R: 255, G: 255, B: 0, A: 255}
 )
 
 func Open(path string) (image.Image, error) {
